@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Energy OS</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='dashboard.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+<div class="wrapper">
+    <nav class="sidebar">
+        <div class="brand">
+            <i class="fa-solid fa-bolt"></i> Electro AI
+        </div>
+        
+        <div class="menu">
+            <a href="/home" class="nav-link {% if request.path == '/home' %}active{% endif %}">
+                <i class="fa-solid fa-house"></i> Home
+            </a>
+            <a href="/predict" class="nav-link {% if request.path == '/predict' %}active{% endif %}">
+                <i class="fa-solid fa-wand-magic-sparkles"></i> Predictor
+            </a>
+            <a href="/analysis" class="nav-link {% if request.path == '/analysis' %}active{% endif %}">
+                <i class="fa-solid fa-chart-line"></i> Analysis
+            </a>
+            <a href="/chatbot" class="nav-link {% if request.path == '/chatbot' %}active{% endif %}">
+                <i class="fa-solid fa-robot"></i> AI Assistant
+            </a>
+            <a href="/about" class="nav-link {% if request.path == '/about' %}active{% endif %}">
+                <i class="fa-solid fa-info-circle"></i> About
+            </a>
+        </div>
+        
+        <div class="user-info">
+            <div class="user-avatar">
+                <i class="fa-solid fa-user"></i>
+            </div>
+            <div class="user-details">
+                <span class="username">{{ session.username if session.username else 'Guest' }}</span>
+                <a href="/logout" class="logout-btn">
+                    <i class="fa-solid fa-sign-out-alt"></i> Logout
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="main-content">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ 'danger' if category == 'error' else 'success' }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        
+        {% block content %}{% endblock %}
+    </div>
+</div>
+
+<script>
+    
+    setTimeout(() => {
+        const alerts = document.querySelectorAll('.alert');
+        alerts.forEach(alert => {
+            alert.style.transition = 'opacity 0.5s';
+            alert.style.opacity = '0';
+            setTimeout(() => alert.remove(), 500);
+        });
+    }, 5000);
+</script>
+
+</body>
+</html>

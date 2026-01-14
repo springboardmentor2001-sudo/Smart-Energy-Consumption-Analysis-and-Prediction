@@ -1,0 +1,64 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="chatbot-container">
+    <div class="chat-window">
+        <div class="chat-header">
+            <h3>Electro AI ChatBot</h3>
+            <form method="POST" action="/clear_chat" style="display: inline;">
+                <button type="submit" class="btn-clear" onclick="return confirm('Clear all chat history?')">
+                    <i class="fa-solid fa-trash"></i>
+                </button>
+            </form>
+        </div>
+
+        <div class="chat-messages" id="messageContainer">
+            {% if chat_history %}
+                {# REMOVED |reverse HERE. Now it iterates Oldest -> Newest #}
+                {% for chat in chat_history %}
+                <div class="message-row {{ 'user-row' if chat.role == 'user' else 'ai-row' }}">
+                    <div class="message-bubble {{ 'user-bubble' if chat.role == 'user' else 'ai-bubble' }}">
+                        <div class="message-content">
+                            {{ chat.message | safe }}
+                        </div>
+                        <span class="message-timestamp">{{ chat.timestamp }}</span>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="empty-chat-state">
+                    <i class="fa-solid fa-comments"></i>
+                    <p>Start a conversation...</p>
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="chat-input-area">
+            <form method="POST" class="chat-form">
+                <input type="text" name="message" id="userInput" placeholder="Type a message..." required autocomplete="off">
+                <button type="submit" class="btn-send">
+                    <i class="fa-solid fa-paper-plane"></i>
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script>
+    
+    function scrollToBottom() {
+        const container = document.getElementById('messageContainer');
+        if (container) {
+            container.scrollTop = container.scrollHeight;
+        }
+    }
+    
+    window.onload = scrollToBottom;
+    
+    document.addEventListener('DOMContentLoaded', function() {
+        document.getElementById('userInput')?.focus();
+        scrollToBottom();
+    });
+</script>
+{% endblock %}

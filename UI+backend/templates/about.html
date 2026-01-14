@@ -1,0 +1,210 @@
+{% extends "layout.html" %}
+{% block content %}
+
+<div class="about-container">
+    <div class="about-header">
+        <h1><i class="fa-solid fa-info-circle"></i> About Smart Energy OS</h1>
+        <p class="subtitle">Intelligent Energy Management System</p>
+    </div>
+    
+    <div class="glass-panel">
+        <h2><i class="fa-solid fa-bullseye"></i> Project Mission</h2>
+        <p>Our mission is to empower homeowners with intelligent tools to understand, predict, and optimize their energy consumption. By combining machine learning with user-friendly interfaces, we aim to make energy efficiency accessible to everyone.</p>
+    </div>
+    
+    <div class="grid-2">
+        <div class="glass-panel">
+            <h2><i class="fa-solid fa-gears"></i> Technical Architecture</h2>
+            <div class="tech-stack">
+                <div class="tech-item">
+                    <div class="tech-icon">
+                        <i class="fa-brands fa-python"></i>
+                    </div>
+                    <div class="tech-info">
+                        <h4>Backend</h4>
+                        <ul>
+                            <li>Flask Web Framework</li>
+                            <li>LightGBM ML Models</li>
+                            <li>SQLite Database</li>
+                            <li>RESTful API Design</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="tech-item">
+                    <div class="tech-icon">
+                        <i class="fa-solid fa-code"></i>
+                    </div>
+                    <div class="tech-info">
+                        <h4>Frontend</h4>
+                        <ul>
+                            <li>HTML5, CSS3, JavaScript</li>
+                            <li>Chart.js for Visualizations</li>
+                            <li>Responsive Design</li>
+                            <li>Glassmorphism UI</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="tech-item">
+                    <div class="tech-icon">
+                        <i class="fa-solid fa-brain"></i>
+                    </div>
+                    <div class="tech-info">
+                        <h4>AI Integration</h4>
+                        <ul>
+                            <li>Google Gemini AI</li>
+                            <li>Real-time Chat Assistant</li>
+                            <li>Predictive Analytics</li>
+                            <li>Natural Language Processing</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="glass-panel">
+            <h2><i class="fa-solid fa-users"></i> Development Team</h2>
+            <div class="team-grid">
+                <div class="team-member">
+                    <div class="member-avatar">
+                        <i class="fa-solid fa-user-tie"></i>
+                    </div>
+                    <div class="member-info">
+                        <h4>AI/ML Engineer</h4>
+                        <p>Machine learning model development and optimization</p>
+                    </div>
+                </div>
+                
+                <div class="team-member">
+                    <div class="member-avatar">
+                        <i class="fa-solid fa-laptop-code"></i>
+                    </div>
+                    <div class="member-info">
+                        <h4>Full Stack Developer</h4>
+                        <p>Web application development and API integration</p>
+                    </div>
+                </div>
+                
+                <div class="team-member">
+                    <div class="member-avatar">
+                        <i class="fa-solid fa-palette"></i>
+                    </div>
+                    <div class="member-info">
+                        <h4>UI/UX Designer</h4>
+                        <p>User interface design and experience optimization</p>
+                    </div>
+                </div>
+                
+                <div class="team-member">
+                    <div class="member-avatar">
+                        <i class="fa-solid fa-database"></i>
+                    </div>
+                    <div class="member-info">
+                        <h4>Data Analyst</h4>
+                        <p>Data processing and insight generation</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="glass-panel">
+        <h2><i class="fa-solid fa-comment-dots"></i> Feedback & Support</h2>
+        
+        <div class="feedback-form">
+            <h3>Share Your Feedback</h3>
+            <p>Your input helps us improve the system. Please rate your experience and share suggestions.</p>
+            
+            <form method="POST" action="{{ url_for('submit_feedback') }}">
+                <div class="form-group">
+                    <label>How would you rate your experience?</label>
+                    <div class="rating-stars">
+                        {% for i in range(1, 6) %}
+                        <input type="radio" id="star{{ i }}" name="rating" value="{{ i }}">
+                        <label for="star{{ i }}">
+                            <i class="fa-solid fa-star"></i>
+                        </label>
+                        {% endfor %}
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="feedback">Your Feedback</label>
+                    <textarea id="feedback" name="feedback" 
+                              rows="4" 
+                              placeholder="Share your thoughts, suggestions, or report issues..."
+                              required></textarea>
+                </div>
+                
+                <button type="submit" class="btn-glow">
+                    <i class="fa-solid fa-paper-plane"></i> Submit Feedback
+                </button>
+            </form>
+        </div>
+        
+        <div class="contact-info">
+            <h3>Contact Information</h3>
+            <div class="contact-grid">
+                <div class="contact-item">
+                    <i class="fa-solid fa-envelope"></i>
+                    <div>
+                        <h5>Email Support</h5>
+                        <p>support@smartenergy.com</p>
+                    </div>
+                </div>
+                
+                <div class="contact-item">
+                    <i class="fa-solid fa-book"></i>
+                    <div>
+                        <h5>Documentation</h5>
+                        <p>docs.smartenergy.com</p>
+                    </div>
+                </div>
+                
+                <div class="contact-item">
+                    <i class="fa-brands fa-github"></i>
+                    <div>
+                        <h5>GitHub Repository</h5>
+                        <p>github.com/krrishtayal</p>
+                    </div>
+                </div>
+                
+                <div class="contact-item">
+                    <i class="fa-solid fa-bug"></i>
+                    <div>
+                        <h5>Issue Tracker</h5>
+                        <p>issues.smartenergy.com</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="glass-panel">
+        <h2><i class="fa-solid fa-shield-alt"></i> Privacy & Security</h2>
+        <div class="privacy-info">
+            <p><strong>Data Privacy:</strong> Your energy data is stored securely and used only for providing you with insights and predictions. We never share your personal information with third parties.</p>
+            <p><strong>Security:</strong> All communications are encrypted, and we follow industry best practices for data protection.</p>
+            <p><strong>Open Source:</strong> Our core algorithms are open source and available for review on GitHub.</p>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Star rating functionality
+    document.querySelectorAll('.rating-stars input').forEach(star => {
+        star.addEventListener('change', function() {
+            const rating = this.value;
+            document.querySelectorAll('.rating-stars label').forEach((label, index) => {
+                if (index < rating) {
+                    label.classList.add('selected');
+                } else {
+                    label.classList.remove('selected');
+                }
+            });
+        });
+    });
+</script>
+
+{% endblock %}

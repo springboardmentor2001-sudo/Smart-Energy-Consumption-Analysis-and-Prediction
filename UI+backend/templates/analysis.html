@@ -1,0 +1,270 @@
+{% extends "layout.html" %}
+{% block content %}
+
+<div class="analysis-header">
+    <h2><i class="fa-solid fa-chart-line"></i> Energy Analysis Dashboard</h2>
+    <div class="header-actions">
+        <span class="stat-badge">
+            <i class="fa-solid fa-database"></i> {{ total_predictions }} Predictions
+        </span>
+        <button class="btn-secondary" onclick="exportData()">
+            <i class="fa-solid fa-download"></i> Export Data
+        </button>
+    </div>
+</div>
+
+<div class="grid-2">
+    <div class="glass-panel">
+        <h3><i class="fa-solid fa-bolt"></i> Energy Consumption Trend</h3>
+        <div class="chart-container">
+            <canvas id="energyChart"></canvas>
+        </div>
+    </div>
+    
+    <div class="glass-panel">
+        <h3><i class="fa-solid fa-temperature-half"></i> Temperature vs Energy</h3>
+        <div class="chart-container">
+            <canvas id="tempEnergyChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<div class="grid-2">
+    <div class="glass-panel">
+        <h3><i class="fa-solid fa-people-group"></i> Occupancy Impact</h3>
+        <div class="chart-container">
+            <canvas id="occupancyChart"></canvas>
+        </div>
+    </div>
+    
+    <div class="glass-panel">
+        <h3><i class="fa-solid fa-fan"></i> HVAC Usage Distribution</h3>
+        <div class="chart-container">
+            <canvas id="hvacChart"></canvas>
+        </div>
+    </div>
+</div>
+
+{% if selected_prediction %}
+<div class="glass-panel highlight-panel">
+    <h3><i class="fa-solid fa-magnifying-glass"></i> Selected Prediction Analysis</h3>
+    <div class="prediction-details">
+        <div class="detail-row">
+            <span class="detail-label">Timestamp:</span>
+            <span class="detail-value">{{ selected_prediction.timestamp }}</span>
+        </div>
+        <div class="detail-row">
+            <span class="detail-label">Predicted Consumption:</span>
+            <span class="detail-value highlight-value">{{ selected_prediction.prediction }} kWh</span>
+        </div>
+        <div class="detail-row">
+            <span class="detail-label">Temperature:</span>
+            <span class="detail-value">{{ selected_prediction.temperature }}°C</span>
+        </div>
+        <div class="detail-row">
+            <span class="detail-label">Occupancy:</span>
+            <span class="detail-value">{{ selected_prediction.occupancy }} people</span>
+        </div>
+        
+        <div class="insights">
+            <h4><i class="fa-solid fa-lightbulb"></i> Insights</h4>
+            <p>
+                {% if selected_prediction.prediction > 50 %}
+                <span class="insight-warning">High consumption detected</span> - Consider reducing HVAC usage or turning off unnecessary lighting.
+                {% else %}
+                <span class="insight-success">Optimal consumption level</span> - Your energy usage is within efficient parameters.
+                {% endif %}
+            </p>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<div class="glass-panel">
+    <h3><i class="fa-solid fa-history"></i> Prediction History</h3>
+    <div class="table-container">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Timestamp</th>
+                    <th>Temp (°C)</th>
+                    <th>Occupancy</th>
+                    <th>HVAC</th>
+                    <th>Lighting</th>
+                    <th>Prediction (kWh)</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for pred in predictions %}
+                <tr>
+                    <td>{{ pred.timestamp }}</td>
+                    <td>{{ pred.temperature }}</td>
+                    <td>{{ pred.occupancy }}</td>
+                    <td>
+                        <span class="status-badge {{ 'status-on' if pred.hvac_usage == 'On' else 'status-off' }}">
+                            {{ pred.hvac_usage }}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="status-badge {{ 'status-on' if pred.lighting_usage == 'On' else 'status-off' }}">
+                            {{ pred.lighting_usage }}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="prediction-value {{ 'high-consumption' if pred.prediction > 50 else 'low-consumption' }}">
+                            {{ pred.prediction }}
+                        </span>
+                    </td>
+                    <td>
+                        <a href="/analysis?prediction_id={{ pred.id }}" class="action-btn">
+                            <i class="fa-solid fa-chart-simple"></i> Analyze
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    
+    {% if not predictions %}
+    <div class="empty-state">
+        <i class="fa-solid fa-chart-bar"></i>
+        <h4>No predictions yet</h4>
+        <p>Make your first prediction to see analysis here</p>
+        <a href="/predict" class="btn-glow">Make Prediction</a>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+    
+    document.addEventListener('DOMContentLoaded', function() {
+        const chartData = {{ chart_data|tojson }};
+        
+        
+        new Chart(document.getElementById('energyChart'), {
+            type: 'line',
+            data: {
+                labels: chartData.timestamps,
+                datasets: [{
+                    label: 'Energy Consumption (kWh)',
+                    data: chartData.energy_values,
+                    borderColor: '#38bdf8',
+                    backgroundColor: 'rgba(56, 189, 248, 0.1)',
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false
+            }
+        });
+        
+       
+        new Chart(document.getElementById('tempEnergyChart'), {
+            type: 'scatter',
+            data: {
+                datasets: [{
+                    label: 'Temperature vs Energy',
+                    data: chartData.timestamps.map((timestamp, i) => ({
+                        x: chartData.temperatures[i],
+                        y: chartData.energy_values[i]
+                    })),
+                    backgroundColor: '#f472b6'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Temperature (°C)'
+                        }
+                    },
+                    y: {
+                        title: {
+                            display: true,
+                            text: 'Energy (kWh)'
+                        }
+                    }
+                }
+            }
+        });
+        
+        // Occupancy Chart
+        const occupancyGroups = {};
+        chartData.predictions.forEach(pred => {
+            const key = pred.occupancy;
+            occupancyGroups[key] = (occupancyGroups[key] || 0) + 1;
+        });
+        
+        new Chart(document.getElementById('occupancyChart'), {
+            type: 'bar',
+            data: {
+                labels: Object.keys(occupancyGroups),
+                datasets: [{
+                    label: 'Number of Predictions',
+                    data: Object.values(occupancyGroups),
+                    backgroundColor: '#34d399'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Count'
+                        }
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Occupancy'
+                        }
+                    }
+                }
+            }
+        });
+        
+        // HVAC Chart
+        const hvacCount = {
+            'On': chartData.predictions.filter(p => p.hvac_usage === 'On').length,
+            'Off': chartData.predictions.filter(p => p.hvac_usage === 'Off').length
+        };
+        
+        new Chart(document.getElementById('hvacChart'), {
+            type: 'doughnut',
+            data: {
+                labels: ['HVAC On', 'HVAC Off'],
+                datasets: [{
+                    data: [hvacCount.On, hvacCount.Off],
+                    backgroundColor: ['#f472b6', '#94a3b8']
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false
+            }
+        });
+    });
+    
+    function exportData() {
+        const dataStr = JSON.stringify({{ predictions|tojson }}, null, 2);
+        const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+        
+        const exportFileDefaultName = 'energy_predictions.json';
+        
+        const linkElement = document.createElement('a');
+        linkElement.setAttribute('href', dataUri);
+        linkElement.setAttribute('download', exportFileDefaultName);
+        linkElement.click();
+    }
+</script>
+
+{% endblock %}

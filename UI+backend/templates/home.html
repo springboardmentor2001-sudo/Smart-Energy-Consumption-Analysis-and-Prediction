@@ -1,0 +1,95 @@
+{% extends "layout.html" %}
+{% block content %}
+
+<div class="welcome-section">
+    <h1>Welcome, {{ username }}!</h1>
+    <p class="subtitle">Smart Home Energy Management System</p>
+</div>
+
+<div class="glass-panel">
+    <h2><i class="fa-solid fa-lightbulb"></i> Project Overview</h2>
+    <p>This intelligent energy management system uses machine learning to predict and optimize your home's energy consumption. Our system analyzes various factors including temperature, occupancy, and appliance usage to provide accurate forecasts and actionable insights.</p>
+    
+    <div class="features-grid">
+        <div class="feature-card">
+            <i class="fa-solid fa-brain"></i>
+            <h4>AI-Powered Predictions</h4>
+            <p>Advanced LightGBM models for accurate energy forecasting</p>
+        </div>
+        <div class="feature-card">
+            <i class="fa-solid fa-chart-bar"></i>
+            <h4>Real-time Analytics</h4>
+            <p>Interactive visualizations of energy consumption patterns</p>
+        </div>
+        <div class="feature-card">
+            <i class="fa-solid fa-robot"></i>
+            <h4>Smart Assistant</h4>
+            <p>AI chatbot for energy-saving recommendations</p>
+        </div>
+        <div class="feature-card">
+            <i class="fa-solid fa-database"></i>
+            <h4>Historical Tracking</h4>
+            <p>Store and compare predictions over time</p>
+        </div>
+    </div>
+</div>
+
+<div class="grid-2">
+    <div class="glass-panel">
+        <h2><i class="fa-solid fa-book"></i> Case Study</h2>
+        <div class="case-study">
+            <h4>Smart Home Optimization Success Story</h4>
+            <p><strong>Client:</strong> Modern 3-bedroom family home (2,000 sq ft)</p>
+            <p><strong>Challenge:</strong> High energy bills during peak summer months</p>
+            <p><strong>Solution:</strong> Implemented our predictive system to optimize HVAC usage</p>
+            <p><strong>Results:</strong></p>
+            <ul>
+                <li><strong>23% reduction</strong> in overall energy consumption</li>
+                <li><strong>15% savings</strong> on monthly energy bills</li>
+                <li>Improved thermal comfort with optimized temperature settings</li>
+                <li>Automatic alerts for unusual consumption patterns</li>
+            </ul>
+            <p class="text-muted">This case demonstrates how intelligent energy management can lead to significant savings while maintaining comfort.</p>
+        </div>
+    </div>
+    
+    <div class="glass-panel">
+        <h2><i class="fa-solid fa-rocket"></i> Quick Actions</h2>
+        <div class="quick-actions">
+            <a href="/predict" class="action-card">
+                <i class="fa-solid fa-bolt"></i>
+                <span>Make Prediction</span>
+            </a>
+            <a href="/analysis" class="action-card">
+                <i class="fa-solid fa-chart-line"></i>
+                <span>View Analytics</span>
+            </a>
+            <a href="/chatbot" class="action-card">
+                <i class="fa-solid fa-robot"></i>
+                <span>Ask Assistant</span>
+            </a>
+            <a href="/about" class="action-card">
+                <i class="fa-solid fa-info-circle"></i>
+                <span>About Project</span>
+            </a>
+        </div>
+        
+        <h3 class="mt-4"><i class="fa-solid fa-trophy"></i> Your Stats</h3>
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-value">{{ total_predictions|default(0) }}</div>
+                <div class="stat-label">Predictions Made</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">{{ avg_prediction|default('--') }}</div>
+                <div class="stat-label">Avg. Prediction (kWh)</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">{{ energy_saved|default('--') }}</div>
+                <div class="stat-label">Est. Energy Saved</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

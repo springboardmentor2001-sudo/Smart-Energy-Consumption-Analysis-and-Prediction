@@ -1,0 +1,48 @@
+{% extends "layout.html" %}
+{% block content %}
+
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:30px;">
+
+<div class="glass">
+    <h2>Energy Prediction</h2>
+
+    <form method="POST">
+        <input name="timestamp" placeholder="Timestamp">
+        <input name="temperature" placeholder="Temperature °C">
+        <input name="sqft" placeholder="Square Footage">
+        <input name="occupancy" placeholder="Occupancy">
+
+        <select name="hvac">
+            <option>On</option><option>Off</option>
+        </select>
+
+        <select name="lighting">
+            <option>On</option><option>Off</option>
+        </select>
+
+        <input name="renewable" placeholder="Renewable Energy">
+        <select name="holiday">
+            <option>No</option><option>Yes</option>
+        </select>
+
+        <button class="btn-glow">Predict</button>
+    </form>
+</div>
+
+{% if prediction %}
+<div class="glass">
+    <h3>Predicted Consumption</h3>
+    <div class="kpi">{{ prediction }} kWh</div>
+    <p>
+        {% if prediction > 50 %}
+        ⚠ High energy usage detected
+        {% else %}
+         Optimal energy usage
+        {% endif %}
+    </p>
+</div>
+{% endif %}
+
+</div>
+
+{% endblock %}
