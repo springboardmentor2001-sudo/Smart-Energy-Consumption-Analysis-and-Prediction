@@ -1,15 +1,22 @@
 import React from 'react';
-import { Bell, User } from 'lucide-react';
+import { Bell, User, Sun, Moon } from 'lucide-react';
 
-const Header = () => {
+const Header = ({ isCollapsed, isDarkMode, toggleTheme }) => {
     return (
-        <header className="z-30 w-full border-b border-border bg-card">
-            <div className="flex items-center justify-between p-4 pl-64">
+        <header className="sticky top-0 z-30 w-full glass border-b border-white/10">
+            <div className={`flex items-center justify-between p-4 transition-all duration-300 ${isCollapsed ? 'pl-20' : 'pl-64'}`}>
                 {/* pl-64 to offset sidebar width on desktop */}
                 <div className="flex items-center">
                     <h1 className="text-xl font-semibold text-foreground">Overview</h1>
                 </div>
                 <div className="flex items-center gap-4">
+                    <button 
+                        onClick={toggleTheme}
+                        className="rounded-full p-2 hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+                        title={isDarkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
+                    >
+                        {isDarkMode ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+                    </button>
                     <button className="rounded-full p-2 hover:bg-muted text-muted-foreground hover:text-foreground">
                         <Bell className="h-5 w-5" />
                     </button>

@@ -1,13 +1,17 @@
 import React from 'react';
-import Sidebar from './Sidebar';
-import Header from './Header';
+import Navbar from './Navbar';
 
-const MainLayout = ({ children, activePage, setActivePage }) => {
+const MainLayout = ({ children, activePage, setActivePage, onLogout, isDarkMode, toggleTheme }) => {
     return (
-        <div className="min-h-screen bg-background">
-            <Sidebar activePage={activePage} setActivePage={setActivePage} />
-            <Header />
-            <main className="min-h-[calc(100vh-64px)] p-6 sm:ml-64 bg-background">
+        <div className="min-h-screen bg-transparent flex flex-col">
+            <Navbar 
+                activePage={activePage} 
+                setActivePage={setActivePage} 
+                onLogout={onLogout}
+                isDarkMode={isDarkMode}
+                toggleTheme={toggleTheme}
+            />
+            <main className="flex-1 w-full max-w-[1600px] mx-auto p-4 sm:p-6 fade-in">
                 {children}
             </main>
         </div>

@@ -4,6 +4,7 @@ export default {
         "./index.html",
         "./src/**/*.{js,ts,jsx,tsx}",
     ],
+    darkMode: 'class',
     theme: {
         extend: {
             colors: {
@@ -40,12 +41,39 @@ export default {
                     DEFAULT: "hsl(var(--card))",
                     foreground: "hsl(var(--card-foreground))",
                 },
+                success: {
+                    DEFAULT: "rgb(16, 185, 129)", // emerald-500
+                    foreground: "white",
+                },
+                warning: {
+                    DEFAULT: "rgb(245, 158, 11)", // amber-500
+                    foreground: "white",
+                },
+                error: {
+                    DEFAULT: "rgb(244, 63, 94)", // rose-500
+                    foreground: "white",
+                },
             },
             borderRadius: {
                 lg: `var(--radius)`,
                 md: `calc(var(--radius) - 2px)`,
                 sm: "calc(var(--radius) - 4px)",
             },
+            animation: {
+                'fade-in-up': 'fadeInUp 0.5s ease-out forwards',
+                'pulse-slow': 'pulse 3s infinite',
+                'typing': 'typing 1.5s infinite',
+            },
+            keyframes: {
+                fadeInUp: {
+                    '0%': { opacity: '0', transform: 'translateY(10px)' },
+                    '100%': { opacity: '1', transform: 'translateY(0)' },
+                },
+                typing: {
+                    '0%, 100%': {  opacity: '0.2' },
+                    '50%': { opacity: '1' },
+                }
+            }
         },
     },
     plugins: [],

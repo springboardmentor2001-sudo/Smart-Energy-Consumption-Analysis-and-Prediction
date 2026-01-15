@@ -1,0 +1,24 @@
+{
+    "energy": {
+        "baseLoad": 12,
+        "budgetLimit": 5000,
+        "currency": "INR",
+        "electricityRate": "5",
+        "occupants": 4,
+        "residential_factor": 0.02,
+        "squareFootage": 1500
+    },
+    "preferences": {
+        "compactMode": false,
+        "dataSharing": false,
+        "emailReports": true,
+        "notifications": true,
+        "theme": "dark"
+    },
+    "profile": {
+        "email": "rahul@infosys.com",
+        "name": "Rahul Rai",
+        "phone": "+91 98765 43210",
+        "role": "Admin"
+    }
+}

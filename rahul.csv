@@ -1,0 +1,25 @@
+timestamp,temperature,humidity,area,occupancy,renewable_percentage,time_of_day,day_type,hvac_level,lighting_level
+2025-01-01 00:00:00,24,55,1500,2,10,Night,Weekday,Medium,Low
+2025-01-01 01:00:00,23,56,1500,1,10,Night,Weekday,Low,Low
+2025-01-01 02:00:00,22,58,1500,1,10,Night,Weekday,Low,Low
+2025-01-01 03:00:00,22,60,1500,0,15,Night,Weekday,Low,Low
+2025-01-01 04:00:00,23,58,1500,1,15,Night,Weekday,Low,Low
+2025-01-01 05:00:00,24,55,1500,2,15,Morning,Weekday,Medium,Medium
+2025-01-01 06:00:00,26,52,1500,3,15,Morning,Weekday,Medium,Medium
+2025-01-01 07:00:00,28,50,1500,4,10,Morning,Weekday,High,High
+2025-01-01 08:00:00,30,48,1500,4,10,Morning,Weekday,High,High
+2025-01-01 09:00:00,32,46,1500,4,5,Afternoon,Weekday,High,Medium
+2025-01-01 10:00:00,33,45,1500,4,5,Afternoon,Weekday,High,Medium
+2025-01-01 11:00:00,34,44,1500,5,5,Afternoon,Weekday,High,Medium
+2025-01-01 12:00:00,35,43,1500,5,0,Afternoon,Weekday,High,Medium
+2025-01-01 13:00:00,34,44,1500,5,0,Afternoon,Weekday,High,Medium
+2025-01-01 14:00:00,33,45,1500,4,0,Afternoon,Weekday,High,Medium
+2025-01-01 15:00:00,32,46,1500,4,0,Afternoon,Weekday,Medium,Medium
+2025-01-01 16:00:00,31,47,1500,4,5,Evening,Weekday,Medium,High
+2025-01-01 17:00:00,30,48,1500,4,5,Evening,Weekday,Medium,High
+2025-01-01 18:00:00,31,47,1500,5,10,Evening,Weekday,High,High
+2025-01-01 19:00:00,32,46,1500,5,10,Evening,Weekday,High,High
+2025-01-01 20:00:00,31,47,1500,4,15,Evening,Weekday,Medium,High
+2025-01-01 21:00:00,30,48,1500,3,15,Night,Weekday,Medium,Medium
+2025-01-01 22:00:00,28,50,1500,2,20,Night,Weekday,Low,Low
+2025-01-01 23:00:00,26,52,1500,2,20,Night,Weekday,Low,Low

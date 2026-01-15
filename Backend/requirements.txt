@@ -4,3 +4,9 @@ pandas
 numpy
 scikit-learn
 tensorflow
+lightgbm
+xgboost
+joblib
+openai
+python-dotenv
+google-generativeai

@@ -2,34 +2,90 @@ import React, { useState } from 'react';
 import MainLayout from './components/layout/MainLayout';
 import Dashboard from './pages/Dashboard';
 import Assistant from './pages/Assistant';
+import Forecast from './pages/Forecast';
+import Devices from './pages/Devices';
+import Insights from './pages/Insights';
+import Reports from './pages/Reports';
 import ChatInterface from './components/chat/ChatInterface';
-import { Bot, Settings, Zap, LineChart, Lightbulb, FileText, X } from 'lucide-react';
+import Settings from './pages/Settings';
+import { Bot, X } from 'lucide-react';
+
+import Login from './pages/Login';
 
 function App() {
+    // Auth State - Default to false for demo
+    const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [activePage, setActivePage] = useState('dashboard');
     const [isChatOpen, setIsChatOpen] = useState(false);
+
+    // Theme State
+    const [isDarkMode, setIsDarkMode] = useState(true);
+
+    React.useEffect(() => {
+        if (isDarkMode) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+    }, [isDarkMode]);
+
+    const toggleTheme = () => {
+        setIsDarkMode(!isDarkMode);
+    };
+
+    const handleLogin = () => {
+        setIsAuthenticated(true);
+    };
+
+    const handleLogout = () => {
+        setIsAuthenticated(false);
+        setActivePage('dashboard'); // Reset page
+    };
+
+    const handleNavigate = (page) => {
+        setActivePage(page);
+        // On mobile or if floating chat is open, we might want to auto-close it
+        // or keep it open. Fore now, let's keep it open if it was open.
+        // But if navigating TO assistant, we close floating chat because full page opens.
+        if (page === 'assistant') {
+            setIsChatOpen(false);
+        }
+    };
 
     const renderPage = () => {
         switch (activePage) {
             case 'dashboard': return <Dashboard />;
-            case 'devices': return <div className="p-10 text-center text-muted-foreground">Devices Page (Coming Soon)</div>;
-            case 'forecast': return <div className="p-10 text-center text-muted-foreground">Forecast Page (Coming Soon)</div>;
-            case 'insights': return <div className="p-10 text-center text-muted-foreground">Insights Page (Coming Soon)</div>;
-            case 'reports': return <div className="p-10 text-center text-muted-foreground">Reports Page (Coming Soon)</div>;
-            case 'assistant': return <Assistant />;
-            case 'settings': return <div className="p-10 text-center text-muted-foreground">Settings Page (Coming Soon)</div>;
+            case 'devices': return <Devices />;
+            case 'forecast': return <Forecast />;
+            case 'insights': return <Insights />;
+            case 'reports': return <Reports />;
+            case 'assistant': return <Assistant onNavigate={handleNavigate} />;
+            case 'settings': return <Settings />;
             default: return <Dashboard />;
         }
     }
 
+    if (!isAuthenticated) {
+        return <Login onLogin={handleLogin} />;
+    }
+
     return (
-        <MainLayout activePage={activePage} setActivePage={setActivePage}>
+        <MainLayout
+            activePage={activePage}
+            setActivePage={setActivePage}
+            onLogout={handleLogout}
+            isDarkMode={isDarkMode}
+            toggleTheme={toggleTheme}
+        >
             {renderPage()}
 
             {/* Floating Chat Popup */}
             {isChatOpen && activePage !== 'assistant' && (
-                <div className="fixed bottom-24 right-6 w-[350px] sm:w-[400px] z-50">
-                    <ChatInterface className="h-[500px] shadow-2xl border-primary/20" />
+                <div className="fixed bottom-24 right-6 w-[350px] sm:w-[500px] z-50">
+                    <ChatInterface
+                        className="h-[600px] shadow-2xl border-primary/20"
+                        onNavigate={handleNavigate}
+                    />
                 </div>
             )}
 
