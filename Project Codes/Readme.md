@@ -21,10 +21,6 @@ A comprehensive web-based energy consumption prediction platform powered by Mach
 - [API Endpoints](#api-endpoints)
 - [Machine Learning Model](#machine-learning-model)
 - [Voice Features](#voice-features)
-- [Screenshots](#screenshots)
-- [Troubleshooting](#troubleshooting)
-- [Contributing](#contributing)
-- [License](#license)
 
 ---
 
