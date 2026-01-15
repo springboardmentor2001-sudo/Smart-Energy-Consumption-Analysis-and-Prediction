@@ -23,7 +23,8 @@ TOTAL_CONSUMPTION = round(data["EnergyConsumption"].sum(), 2)
 
 MAX_CONSUMPTION = data["EnergyConsumption"].max() * len(data)
 CONSUMPTION_PERCENT = int((TOTAL_CONSUMPTION / MAX_CONSUMPTION) * 100)
-
+import requests
+from flask import jsonify
 
 # HOME PAGE
 @app.route("/")
@@ -737,7 +738,81 @@ def home():
           0%, 50%, 100% { opacity: 1; }
           25%, 75% { opacity: 0; }
         }
+        /* bot css */
+        #chat-toggle {
+          position: fixed;
+          bottom: 24px;
+          right: 24px;
+          width: 56px;
+          height: 56px;
+          background: #22c55e;
+          color: #020617;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 26px;
+          cursor: pointer;
+          z-index: 9999;
+        }
         
+        #chatbot {
+          position: fixed;
+          bottom: 90px;
+          right: 24px;
+          width: 320px;
+          height: 420px;
+          background: #020617;
+          border-radius: 14px;
+          box-shadow: 0 0 40px rgba(0,0,0,0.6);
+          display: none;
+          flex-direction: column;
+          z-index: 9999;
+        }
+        
+        .chat-header {
+          background: #22c55e;
+          color: #020617;
+          padding: 12px;
+          font-weight: 600;
+          text-align: center;
+          border-radius: 14px 14px 0 0;
+        }
+        
+        #chat-messages {
+          flex: 1;
+          padding: 10px;
+          overflow-y: auto;
+          font-size: 14px;
+        }
+        
+        .msg {
+          margin-bottom: 8px;
+        }
+        
+        .user { color: #22c55e; }
+        .bot { color: #e5e7eb; }
+        
+        .chat-input {
+          display: flex;
+          border-top: 1px solid #1e293b;
+        }
+        
+        .chat-input input {
+          flex: 1;
+          background: transparent;
+          border: none;
+          padding: 10px;
+          color: white;
+        }
+        
+        .chat-input button {
+          background: #22c55e;
+          border: none;
+          padding: 0 16px;
+          cursor: pointer;
+        }
+
     
       </style>
     </head>
@@ -1100,6 +1175,17 @@ def home():
           </div>
         </div>
       </footer>
+      <div id="chat-toggle">💬</div>
+
+        <!-- Chatbot Box -->
+        <div id="chatbot">
+          <div class="chat-header">Energy Support</div>
+          <div id="chat-messages"></div>
+          <div class="chat-input">
+            <input type="text" id="chat-text" placeholder="Ask about energy..." />
+            <button onclick="sendMessage()">➤</button>
+          </div>
+        </div>
       <script>
       const words = [
         "Smarter Tomorrow",
@@ -1143,6 +1229,45 @@ def home():
     
       typeEffect();
     </script>
+    <script>
+        const toggle = document.getElementById("chat-toggle");
+        const bot = document.getElementById("chatbot");
+        
+        toggle.onclick = () => {
+          bot.style.display = bot.style.display === "flex" ? "none" : "flex";
+        };
+        
+        async function sendMessage() {
+          const input = document.getElementById("chat-text");
+          const msg = input.value.trim();
+          if (!msg) return;
+        
+          addMsg("You", msg, "user");
+          input.value = "";
+        
+          const res = await fetch("/chat", {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({message: msg})
+          });
+        
+          const data = await res.json();
+        
+          if (data.reply === "REDIRECT_TO_OVERVIEWS") {
+            window.location.href = "/overviews#prediction";
+            return;
+          }
+        
+          addMsg("Bot", data.reply, "bot");
+        }
+        
+        function addMsg(sender, text, cls) {
+          const box = document.getElementById("chat-messages");
+          box.innerHTML += `<div class="msg ${cls}"><b>${sender}:</b> ${text}</div>`;
+          box.scrollTop = box.scrollHeight;
+        }
+    </script>
+
     
     </body>
     </html>
