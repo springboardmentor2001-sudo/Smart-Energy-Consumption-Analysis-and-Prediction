@@ -11,8 +11,16 @@ cd Smart-Energy-Consumption-Analysis-and-Prediction
 **Option 2:** Download ZIP
 
 1.Go to the repository on GitHub
+<<<<<<< HEAD
 2.Click Code → Download ZIP
 3.Extract the ZIP file
+=======
+
+2.Click Code → Download ZIP
+
+3.Extract the ZIP file
+
+>>>>>>> 79429f6 (Add README.md)
 4.Open the extracted folder in your terminal or VS Code
 
 **Install Dependencies
