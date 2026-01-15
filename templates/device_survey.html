@@ -1,0 +1,264 @@
+<!-- templates/device_survey.html -->
+{% extends "base.html" %}
+{% block title %}Device Survey{% endblock %}
+
+{% block content %}
+<style>
+    .survey-container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 2rem;
+    }
+    
+    .survey-title {
+        text-align: center;
+        color: #667eea;
+        font-size: 2.5rem;
+        margin-bottom: 1rem;
+    }
+    
+    .survey-subtitle {
+        text-align: center;
+        color: #666;
+        font-size: 1.1rem;
+        margin-bottom: 2rem;
+    }
+    
+    .survey-info {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 1.5rem;
+        border-radius: 10px;
+        margin-bottom: 2rem;
+        text-align: center;
+    }
+    
+    .survey-form {
+        background: #f8f9fa;
+        padding: 2rem;
+        border-radius: 15px;
+    }
+    
+    .device-group {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 10px;
+        margin-bottom: 1.5rem;
+        border-left: 4px solid #667eea;
+    }
+    
+    .device-header {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+    
+    .device-icon {
+        font-size: 2.5rem;
+    }
+    
+    .device-info {
+        flex: 1;
+    }
+    
+    .device-name {
+        font-size: 1.3rem;
+        font-weight: bold;
+        color: #667eea;
+        margin-bottom: 0.25rem;
+    }
+    
+    .device-description {
+        font-size: 0.9rem;
+        color: #666;
+    }
+    
+    .device-input {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+    
+    .device-input label {
+        flex: 1;
+        font-weight: 500;
+        color: #333;
+    }
+    
+    .device-input input {
+        width: 100px;
+        padding: 0.75rem;
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        font-size: 1.1rem;
+        text-align: center;
+    }
+    
+    .device-input input:focus {
+        outline: none;
+        border-color: #667eea;
+    }
+    
+    .submit-btn {
+        width: 100%;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        padding: 1rem;
+        border-radius: 8px;
+        font-size: 1.2rem;
+        font-weight: bold;
+        cursor: pointer;
+        transition: transform 0.2s;
+        margin-top: 1rem;
+    }
+    
+    .submit-btn:hover {
+        transform: translateY(-2px);
+    }
+    
+    .skip-btn {
+        display: block;
+        text-align: center;
+        margin-top: 1rem;
+        color: #666;
+        text-decoration: none;
+        font-size: 1rem;
+    }
+    
+    .skip-btn:hover {
+        color: #667eea;
+    }
+</style>
+
+<div class="survey-container">
+    <h1 class="survey-title">🏠 Device Survey</h1>
+    <p class="survey-subtitle">Help us provide personalized energy-saving recommendations</p>
+    
+    <div class="survey-info">
+        <h3 style="margin-bottom: 0.5rem;">📊 Why We Need This Information</h3>
+        <p style="opacity: 0.9;">
+            By knowing which devices you use, we can give you specific tips tailored to your home. 
+            This helps you save more energy and reduce costs effectively.
+        </p>
+    </div>
+    
+    <form method="POST" class="survey-form">
+        <div class="device-group">
+            <div class="device-header">
+                <div class="device-icon">📺</div>
+                <div class="device-info">
+                    <div class="device-name">Television Sets</div>
+                    <div class="device-description">Average: 100-200W per TV. Phantom load: 5-10W when off</div>
+                </div>
+            </div>
+            <div class="device-input">
+                <label>How many TVs do you have?</label>
+                <input type="number" name="tvs" min="0" value="{{ profile.tvs if profile else 0 }}">
+            </div>
+        </div>
+        
+        <div class="device-group">
+            <div class="device-header">
+                <div class="device-icon">🧊</div>
+                <div class="device-info">
+                    <div class="device-name">Refrigerators</div>
+                    <div class="device-description">Average: 150-200W. Older models use 30-50% more energy</div>
+                </div>
+            </div>
+            <div class="device-input">
+                <label>How many refrigerators/freezers?</label>
+                <input type="number" name="refrigerators" min="0" value="{{ profile.refrigerators if profile else 0 }}">
+            </div>
+        </div>
+        
+        <div class="device-group">
+            <div class="device-header">
+                <div class="device-icon">🧺</div>
+                <div class="device-info">
+                    <div class="device-name">Washing Machines</div>
+                    <div class="device-description">Average: 500-1000W per load. Use cold water to save 90% of energy</div>
+                </div>
+            </div>
+            <div class="device-input">
+                <label>How many washing machines?</label>
+                <input type="number" name="washing_machines" min="0" value="{{ profile.washing_machines if profile else 0 }}">
+            </div>
+        </div>
+        
+        <div class="device-group">
+            <div class="device-header">
+                <div class="device-icon">🌀</div>
+                <div class="device-info">
+                    <div class="device-name">Clothes Dryers</div>
+                    <div class="device-description">Average: 2000-5000W. One of the highest energy consumers</div>
+                </div>
+            </div>
+            <div class="device-input">
+                <label>How many dryers?</label>
+                <input type="number" name="dryers" min="0" value="{{ profile.dryers if profile else 0 }}">
+            </div>
+        </div>
+        
+        <div class="device-group">
+            <div class="device-header">
+                <div class="device-icon">💻</div>
+                <div class="device-info">
+                    <div class="device-name">Computers & Laptops</div>
+                    <div class="device-description">Desktop: 200-500W, Laptop: 50-100W. Enable sleep mode</div>
+                </div>
+            </div>
+            <div class="device-input">
+                <label>How many computers/laptops?</label>
+                <input type="number" name="computers" min="0" value="{{ profile.computers if profile else 0 }}">
+            </div>
+        </div>
+        
+        <div class="device-group">
+            <div class="device-header">
+                <div class="device-icon">❄️</div>
+                <div class="device-info">
+                    <div class="device-name">Air Conditioning Units</div>
+                    <div class="device-description">Average: 1000-4000W. Biggest summer energy consumer</div>
+                </div>
+            </div>
+            <div class="device-input">
+                <label>How many AC units?</label>
+                <input type="number" name="ac_units" min="0" value="{{ profile.ac_units if profile else 0 }}">
+            </div>
+        </div>
+        
+        <div class="device-group">
+            <div class="device-header">
+                <div class="device-icon">💧</div>
+                <div class="device-info">
+                    <div class="device-name">Water Heaters</div>
+                    <div class="device-description">Average: 4000-5500W. Second highest energy consumer in homes</div>
+                </div>
+            </div>
+            <div class="device-input">
+                <label>How many water heaters?</label>
+                <input type="number" name="water_heaters" min="0" value="{{ profile.water_heaters if profile else 0 }}">
+            </div>
+        </div>
+        
+        <div class="device-group">
+            <div class="device-header">
+                <div class="device-icon">🍽️</div>
+                <div class="device-info">
+                    <div class="device-name">Dishwashers</div>
+                    <div class="device-description">Average: 1200-1500W per cycle. Use eco mode to save 20-30%</div>
+                </div>
+            </div>
+            <div class="device-input">
+                <label>How many dishwashers?</label>
+                <input type="number" name="dishwashers" min="0" value="{{ profile.dishwashers if profile else 0 }}">
+            </div>
+        </div>
+        
+        <button type="submit" class="submit-btn">💾 Save Device Profile</button>
+        <a href="{{ url_for('prediction') }}" class="skip-btn">Skip for now →</a>
+    </form>
+</div>
+{% endblock %}

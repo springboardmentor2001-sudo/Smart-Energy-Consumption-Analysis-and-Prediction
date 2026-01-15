@@ -1,0 +1,1191 @@
+<!-- templates/prediction.html - CORRECTED VERSION -->
+{% extends "base.html" %}
+{% block title %}Prediction{% endblock %}
+
+{% block content %}
+<style>
+    .prediction-wrapper {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 2rem;
+    }
+    
+    .page-title {
+        text-align: center;
+        color: #667eea;
+        font-size: 2.5rem;
+        margin-bottom: 2rem;
+        font-weight: bold;
+    }
+    
+    /* Tab Navigation */
+    .tab-navigation {
+        display: flex;
+        background: white;
+        border-radius: 15px 15px 0 0;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        overflow: hidden;
+    }
+    
+    .tab-button {
+        flex: 1;
+        padding: 1.5rem 2rem;
+        border: none;
+        background: white;
+        color: #666;
+        font-size: 1.1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s;
+        border-bottom: 3px solid transparent;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+    }
+    
+    .tab-button:hover {
+        background: #f8f9fa;
+        color: #667eea;
+    }
+    
+    .tab-button.active {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-bottom: 3px solid #764ba2;
+    }
+    
+    .tab-icon {
+        font-size: 1.5rem;
+    }
+    
+    /* Tab Content */
+    .tab-content {
+        background: white;
+        border-radius: 0 0 15px 15px;
+        padding: 3rem;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        min-height: 600px;
+        display: none;
+    }
+    
+    .tab-content.active {
+        display: block;
+        animation: fadeIn 0.3s ease-in;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    /* Input Tab Styles */
+    .input-container {
+        max-width: 900px;
+        margin: 0 auto;
+    }
+    
+    .weather-section {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 15px;
+        margin-bottom: 2rem;
+    }
+    
+    .weather-section h3 {
+        margin-bottom: 1rem;
+        font-size: 1.5rem;
+    }
+    
+    .weather-input-group {
+        display: flex;
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+    
+    .weather-input-group input {
+        flex: 1;
+        padding: 1rem;
+        border: none;
+        border-radius: 10px;
+        font-size: 1rem;
+    }
+    
+    .weather-btn {
+        background: white;
+        color: #667eea;
+        border: none;
+        padding: 1rem 2rem;
+        border-radius: 10px;
+        cursor: pointer;
+        font-weight: bold;
+        font-size: 1rem;
+        transition: transform 0.2s;
+    }
+    
+    .weather-btn:hover {
+        transform: scale(1.05);
+    }
+    
+    .weather-info {
+        display: none;
+        margin-top: 1rem;
+        padding: 1rem;
+        background: rgba(255,255,255,0.2);
+        border-radius: 10px;
+    }
+
+    .form-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 2rem;
+        margin-bottom: 2rem;
+    }
+    
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+    
+    .form-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        color: #333;
+        font-weight: 600;
+        font-size: 1rem;
+    }
+    
+    .form-group input,
+    .form-group select {
+        width: 100%;
+        padding: 1rem;
+        border: 2px solid #e0e0e0;
+        border-radius: 10px;
+        font-size: 1rem;
+        transition: border-color 0.3s;
+    }
+    
+    .form-group input:focus,
+    .form-group select:focus {
+        outline: none;
+        border-color: #667eea;
+    }
+    
+    .predict-btn {
+        width: 100%;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        padding: 1.5rem;
+        border-radius: 15px;
+        font-size: 1.3rem;
+        font-weight: bold;
+        cursor: pointer;
+        transition: transform 0.2s;
+    }
+    
+    .predict-btn:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+    }
+    
+    .device-survey-banner {
+        background: #fff3cd;
+        border: 2px solid #ffc107;
+        padding: 1.5rem;
+        border-radius: 10px;
+        margin-top: 2rem;
+        text-align: center;
+    }
+    
+    .device-survey-banner a {
+        color: #856404;
+        font-weight: bold;
+        text-decoration: none;
+        font-size: 1.1rem;
+    }
+    
+    .device-survey-banner a:hover {
+        text-decoration: underline;
+    }
+    
+    /* Results Tab Styles */
+    .results-container {
+        max-width: 1000px;
+        margin: 0 auto;
+    }
+    
+    .result-hero {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 3rem;
+        border-radius: 20px;
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+    
+    .result-label {
+        font-size: 1.5rem;
+        opacity: 0.9;
+        margin-bottom: 1rem;
+    }
+    
+    .result-value {
+        font-size: 3.5rem;
+        font-weight: bold;
+        margin: 1rem 0;
+    }
+    
+    .result-unit {
+        font-size: 2rem;
+        opacity: 0.9;
+    }
+    
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 2rem;
+        margin-bottom: 2rem;
+    }
+    
+    .stat-card {
+        background: #f8f9fa;
+        padding: 2rem;
+        border-radius: 15px;
+        text-align: center;
+        border-left: 4px solid #667eea;
+    }
+    
+    .stat-icon {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+    }
+    
+    .stat-label {
+        color: #666;
+        font-size: 1rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .stat-value {
+        color: #667eea;
+        font-size: 2rem;
+        font-weight: bold;
+    }
+    
+    .stat-value.above {
+        color: #ff4757;
+    }
+    
+    .stat-value.below {
+        color: #10b981;
+    }
+    
+    .chart-section {
+        background: #f8f9fa;
+        padding: 2rem;
+        border-radius: 15px;
+    }
+    
+    .chart-title {
+        color: #667eea;
+        font-size: 1.5rem;
+        margin-bottom: 1.5rem;
+        text-align: center;
+    }
+    
+    .chart-container {
+        width: 100%;
+        height: 400px;
+    }
+    
+    .no-data {
+        text-align: center;
+        padding: 4rem;
+        color: #999;
+        font-size: 1.2rem;
+    }
+    
+    /* Suggestions Tab Styles */
+    .suggestions-container {
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+    
+    .suggestions-hero {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 15px;
+        margin-bottom: 2rem;
+        text-align: center;
+    }
+    
+    .suggestions-hero h2 {
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .total-savings {
+        font-size: 1.8rem;
+        font-weight: bold;
+        margin-top: 0.5rem;
+    }
+    
+    .suggestions-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 2rem;
+    }
+    
+    .suggestion-card {
+        background: #f8f9fa;
+        padding: 2rem;
+        border-radius: 15px;
+        border-left: 4px solid #667eea;
+        transition: transform 0.3s, box-shadow 0.3s;
+    }
+    
+    .suggestion-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+    }
+    
+    .suggestion-header {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+    
+    .suggestion-icon {
+        font-size: 3rem;
+    }
+    
+    .suggestion-category {
+        font-size: 1.3rem;
+        font-weight: bold;
+        color: #667eea;
+    }
+    
+    .suggestion-message {
+        color: #555;
+        margin-bottom: 1rem;
+        font-size: 1rem;
+        line-height: 1.6;
+    }
+    
+    .suggestion-action {
+        background: white;
+        padding: 1rem;
+        border-radius: 10px;
+        color: #333;
+        font-weight: 500;
+        margin-bottom: 1rem;
+        border-left: 3px solid #667eea;
+    }
+    
+    .suggestion-savings {
+        color: #10b981;
+        font-weight: bold;
+        font-size: 1.1rem;
+    }
+    
+    /* History Tab Styles */
+    .history-container {
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+    
+    .history-stats {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 2rem;
+        margin-bottom: 3rem;
+    }
+    
+    .history-stat-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 15px;
+        text-align: center;
+    }
+    
+    .history-stat-value {
+        font-size: 2.5rem;
+        font-weight: bold;
+        margin-bottom: 0.5rem;
+    }
+    
+    .history-stat-label {
+        font-size: 1rem;
+        opacity: 0.9;
+    }
+
+    .file-upload-section {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 2rem;
+    border-radius: 15px;
+    margin-bottom: 2rem;
+    }
+
+    .file-upload-section h3 {
+        margin-bottom: 0.5rem;
+        font-size: 1.5rem;
+    }
+
+    .upload-area {
+        background: rgba(255,255,255,0.2);
+        border: 2px dashed rgba(255,255,255,0.5);
+        border-radius: 15px;
+        padding: 3rem 2rem;
+        text-align: center;
+        margin-top: 1rem;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+
+    .upload-area:hover {
+        background: rgba(255,255,255,0.3);
+        border-color: white;
+    }
+
+    .upload-area.dragover {
+        background: rgba(255,255,255,0.4);
+        border-color: white;
+        transform: scale(1.02);
+    }
+
+    .upload-icon {
+        font-size: 4rem;
+        margin-bottom: 1rem;
+    }
+
+    .upload-text {
+        font-size: 1.2rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+
+    .upload-subtext {
+        font-size: 0.9rem;
+        opacity: 0.8;
+        margin-bottom: 1.5rem;
+    }
+
+    .browse-btn {
+        background: white;
+        color: #667eea;
+        border: none;
+        padding: 0.75rem 2rem;
+        border-radius: 10px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: transform 0.2s;
+    }
+
+    .browse-btn:hover {
+        transform: scale(1.05);
+    }
+
+    .file-info {
+        background: rgba(255,255,255,0.2);
+        padding: 1rem;
+        border-radius: 10px;
+        margin-top: 1rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .remove-file-btn {
+        background: rgba(255,77,87,0.8);
+        color: white;
+        border: none;
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        cursor: pointer;
+        font-weight: bold;
+    }
+
+.upload-submit-btn {
+    width: 100%;
+    background: white;
+    color: #667eea;
+    border: none;
+    padding: 1rem;
+    border-radius: 10px;
+    font-size: 1.1rem;
+    font-weight: bold;
+    cursor: pointer;
+    margin-top: 1rem;
+    transition: transform 0.2s;
+}
+
+.upload-submit-btn:hover {
+    transform: translateY(-2px);
+}
+
+.upload-progress {
+    margin-top: 1rem;
+}
+
+.progress-bar {
+    background: rgba(255,255,255,0.3);
+    height: 30px;
+    border-radius: 15px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    background: white;
+    height: 100%;
+    width: 0%;
+    transition: width 0.3s;
+}
+
+#progressText {
+    text-align: center;
+    margin-top: 0.5rem;
+    font-weight: 600;
+}
+
+.upload-results {
+    margin-top: 2rem;
+    background: rgba(255,255,255,0.2);
+    padding: 1.5rem;
+    border-radius: 10px;
+}
+
+.result-item {
+    background: white;
+    color: #333;
+    padding: 1rem;
+    border-radius: 10px;
+    margin-bottom: 1rem;
+}
+
+.result-prediction {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #667eea;
+    text-align: center;
+}
+
+.divider {
+    text-align: center;
+    margin: 2rem 0;
+    position: relative;
+}
+
+.divider::before,
+.divider::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    width: 45%;
+    height: 2px;
+    background: #e0e0e0;
+}
+
+.divider::before {
+    left: 0;
+}
+
+.divider::after {
+    right: 0;
+}
+
+.divider span {
+    background: white;
+    padding: 0 1rem;
+    color: #999;
+    font-weight: 600;
+}
+
+.file-format-info {
+    margin-top: 1.5rem;
+}
+
+.file-format-info details {
+    background: rgba(255,255,255,0.1);
+    padding: 1rem;
+    border-radius: 10px;
+    cursor: pointer;
+}
+
+.file-format-info summary {
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.format-details {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid rgba(255,255,255,0.3);
+}
+
+.format-details h4 {
+    margin: 1rem 0 0.5rem 0;
+}
+
+.format-details pre {
+    background: rgba(0,0,0,0.2);
+    padding: 1rem;
+    border-radius: 5px;
+    overflow-x: auto;
+    font-size: 0.85rem;
+}
+
+.format-details ul {
+    list-style-position: inside;
+}
+
+    
+@media (max-width: 1024px) {
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+        
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+        
+    .suggestions-grid {
+        grid-template-columns: 1fr;
+    }
+        
+    .history-stats {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+    
+@media (max-width: 768px) {
+    .tab-button {
+        padding: 1rem;
+        font-size: 0.9rem;
+    }
+        
+    .tab-icon {
+        font-size: 1.2rem;
+    }
+        
+    .result-value {
+        font-size: 3.5rem;
+    }
+}
+</style>
+
+<div class="prediction-wrapper">
+    <h1 class="page-title">⚡ Smart Energy Predictor</h1>
+    
+    <!-- Tab Navigation -->
+    <div class="tab-navigation">
+        <button class="tab-button active" onclick="switchTab('input')">
+            <span class="tab-icon">📝</span>
+            <span>Input</span>
+        </button>
+        <button class="tab-button" onclick="switchTab('results')">
+            <span class="tab-icon">📊</span>
+            <span>Results</span>
+        </button>
+        <button class="tab-button" onclick="switchTab('suggestions')">
+            <span class="tab-icon">💡</span>
+            <span>Suggestions</span>
+        </button>
+        <button class="tab-button" onclick="switchTab('history')">
+            <span class="tab-icon">📈</span>
+            <span>History</span>
+        </button>
+    </div>
+    
+    <!-- Tab 1: Input -->
+    <div id="inputTab" class="tab-content active">
+        <div class="input-container">
+            <div class="weather-section">
+                <h3>🌤️ Live Weather Data</h3>
+                <p style="opacity: 0.9;">Get real-time temperature and humidity for accurate predictions</p>
+                <div class="weather-input-group">
+                    <input type="text" id="cityInput" placeholder="Enter your city name (e.g., London, New York)">
+                    <button class="weather-btn" onclick="fetchWeather()">🔍 Get Weather</button>
+                </div>
+                <div class="weather-info" id="weatherInfo"></div>
+            </div>
+
+            <div class="file-upload-section">
+                <h3>📁 Upload Your Energy Data</h3>
+                <p style="opacity: 0.9;">Upload a CSV or PDF file with your energy usage information for quick predictions</p>
+    
+                <div class="upload-area" id="uploadArea">
+                    <div class="upload-icon">📤</div>
+                    <p class="upload-text">Drag & drop your file here or click to browse</p>
+                    <p class="upload-subtext">Supports CSV and PDF files (Max 16MB)</p>
+                    <input type="file" id="fileInput" accept=".csv,.pdf" style="display: none;">
+                    <button class="browse-btn" onclick="document.getElementById('fileInput').click()">
+                    Choose File
+                    </button>
+                </div>
+    
+                <div id="fileInfo" style="display: none;" class="file-info">
+                    <span id="fileName"></span>
+                    <button class="remove-file-btn" onclick="removeFile()">✕</button>
+                </div>
+    
+                <button id="uploadBtn" class="upload-submit-btn" style="display: none;" onclick="uploadFile()">
+                    🚀 Upload & Generate Predictions
+                </button>
+    
+                <div id="uploadProgress" style="display: none;" class="upload-progress">
+                    <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <p id="progressText">Processing...</p>
+                </div>
+    
+                <div id="uploadResults" style="display: none;" class="upload-results">
+                    <!-- Results will be inserted here -->
+                </div>
+    
+                <div class="file-format-info">
+                    <details>
+                        <summary>📋 File Format Guidelines</summary>
+                        <div class="format-details">
+                            <h4>CSV Format:</h4>
+                            <pre>temperature,humidity,square_footage,occupancy,hvac_usage,lighting_usage,renewable_energy
+22.5,55,2000,4,1,1,15
+25.0,60,1800,3,1,0,20</pre>
+                
+                            <h4>PDF Format:</h4>
+                            <p>Your PDF should contain these fields:</p>
+                            <ul>
+                                <li>Temperature: 25°C</li>
+                                <li>Humidity: 60%</li>
+                                <li>Square Footage: 2000</li>
+                                <li>Occupancy: 4 people</li>
+                                <li>HVAC: On/Off</li>
+                                <li>Lighting: On/Off</li>
+                                <li>Renewable Energy: 15 kWh</li>
+                            </ul>
+                        </div>
+                    </details>
+                </div>
+            </div>
+
+            <div class="divider">
+                <span>OR</span>
+            </div>
+            
+            <form id="predictionForm">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="temperature">🌡️ Temperature (°C)</label>
+                        <input type="number" id="temperature" name="temperature" step="0.1" placeholder="e.g., 22.5" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="humidity">💧 Humidity (%)</label>
+                        <input type="number" id="humidity" name="humidity" step="0.1" min="0" max="100" placeholder="e.g., 55" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="square_footage">🏠 Square Footage (sq ft)</label>
+                        <input type="number" id="square_footage" name="square_footage" placeholder="e.g., 2000" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="occupancy">👥 Occupancy (People)</label>
+                        <input type="number" id="occupancy" name="occupancy" min="0" placeholder="e.g., 4" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="hvac_usage">❄️ HVAC Status</label>
+                        <select id="hvac_usage" name="hvac_usage" required>
+                            <option value="0">Off</option>
+                            <option value="1">On</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="lighting_usage">💡 Lighting Status</label>
+                        <select id="lighting_usage" name="lighting_usage" required>
+                            <option value="0">Off</option>
+                            <option value="1">On</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="holiday">🎉 Holiday Today?</label>
+                        <select id="holiday" name="holiday" required>
+                            <option value="0">No</option>
+                            <option value="1">Yes</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="renewable_energy">☀️ Renewable Energy (kWh)</label>
+                        <input type="number" id="renewable_energy" name="renewable_energy" step="0.1" min="0" placeholder="e.g., 15" required>
+                    </div>
+                </div>
+                
+                <button type="submit" class="predict-btn">🔮 Generate Prediction & Suggestions</button>
+            </form>
+            
+            <div class="device-survey-banner">
+                <strong>💡 Want More Personalized Suggestions?</strong><br>
+                <a href="{{ url_for('device_survey') }}">Complete Your Device Survey →</a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Tab 2: Results -->
+    <div id="resultsTabContent" class="tab-content">
+        <div class="results-container">
+            <div id="noResultsMessage" class="no-data">
+                📊 Make a prediction to see your results here!
+            </div>
+            
+            <div id="resultsContent" style="display: none;">
+                <div class="result-hero">
+                    <div class="result-label">Your Predicted Energy Consumption</div>
+                    <div class="result-value" id="predictionValue">0</div>
+                    <div class="result-unit">kWh</div>
+                </div>
+                
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">🏠</div>
+                        <div class="stat-label">Your Usage</div>
+                        <div class="stat-value" id="yourUsage">0 kWh</div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon">📊</div>
+                        <div class="stat-label">Typical Similar Home</div>
+                        <div class="stat-value" id="typicalUsage">0 kWh</div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon">📈</div>
+                        <div class="stat-label">You're</div>
+                        <div class="stat-value" id="comparisonStatus">-</div>
+                    </div>
+                </div>
+                
+                <div class="chart-section">
+                    <h3 class="chart-title">📉 Your Prediction History</h3>
+                    <div class="chart-container">
+                        <canvas id="historyChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Tab 3: Suggestions -->
+    <div id="suggestionsTabContent" class="tab-content">
+        <div class="suggestions-container">
+            <div id="noSuggestionsMessage" class="no-data">
+                💡 Make a prediction to get personalized energy-saving suggestions!
+            </div>
+            
+            <div id="suggestionsContent" style="display: none;">
+                <div class="suggestions-hero">
+                    <h2>💡 Your Personalized Energy-Saving Tips</h2>
+                    <div class="total-savings">
+                        💰 Potential Savings: <span id="totalSavings">0</span> kWh/day
+                    </div>
+                </div>
+                
+                <div class="suggestions-grid" id="suggestionsList"></div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Tab 4: History -->
+    <div id="historyTabContent" class="tab-content">
+        <div class="history-container">
+            <div class="history-stats">
+                <div class="history-stat-card">
+                    <div class="history-stat-value" id="totalPredictions">0</div>
+                    <div class="history-stat-label">Total Predictions</div>
+                </div>
+                <div class="history-stat-card">
+                    <div class="history-stat-value" id="avgConsumption">0</div>
+                    <div class="history-stat-label">Average kWh</div>
+                </div>
+                <div class="history-stat-card">
+                    <div class="history-stat-value" id="lowestConsumption">0</div>
+                    <div class="history-stat-label">Lowest kWh</div>
+                </div>
+                <div class="history-stat-card">
+                    <div class="history-stat-value" id="highestConsumption">0</div>
+                    <div class="history-stat-label">Highest kWh</div>
+                </div>
+            </div>
+            
+            <div class="chart-section">
+                <h3 class="chart-title">📊 Complete Prediction History</h3>
+                <div class="chart-container">
+                    <canvas id="historyChartFull"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    let historyChart = null;
+    let historyChartFull = null;
+    
+    function switchTab(tabName) {
+        // Remove active class from all tabs
+        document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+        
+        // Add active class to selected tab
+        const tabs = document.querySelectorAll('.tab-button');
+        
+        if (tabName === 'input') {
+            tabs[0].classList.add('active');
+            document.getElementById('inputTab').classList.add('active');
+        } else if (tabName === 'results') {
+            tabs[1].classList.add('active');
+            document.getElementById('resultsTabContent').classList.add('active');
+        } else if (tabName === 'suggestions') {
+            tabs[2].classList.add('active');
+            document.getElementById('suggestionsTabContent').classList.add('active');
+        } else if (tabName === 'history') {
+            tabs[3].classList.add('active');
+            document.getElementById('historyTabContent').classList.add('active');
+            loadFullHistory();
+        }
+    }
+    
+    async function fetchWeather() {
+        const city = document.getElementById('cityInput').value.trim();
+        if (!city) {
+            alert('Please enter a city name');
+            return;
+        }
+        
+        try {
+            const response = await fetch(`/api/weather/${city}`);
+            const data = await response.json();
+            
+            if (data.temperature) {
+                document.getElementById('temperature').value = data.temperature;
+                document.getElementById('humidity').value = data.humidity;
+                
+                const weatherInfo = document.getElementById('weatherInfo');
+                weatherInfo.innerHTML = `
+                    <strong>✓ Weather Data Loaded!</strong><br>
+                    Temperature: ${data.temperature}°C | Humidity: ${data.humidity}%<br>
+                    <em>${data.description}</em>
+                `;
+                weatherInfo.style.display = 'block';
+            } else {
+                alert('Could not fetch weather data for this city');
+            }
+        } catch (error) {
+            alert('Error fetching weather data');
+        }
+    }
+    
+    async function loadHistory() {
+        try {
+            const response = await fetch('/api/prediction_history');
+            const history = await response.json();
+            
+            if (history.length > 0) {
+                const labels = history.map(h => h.timestamp).reverse();
+                const data = history.map(h => h.consumption).reverse();
+                
+                const ctx = document.getElementById('historyChart');
+                if (ctx) {
+                    if (historyChart) {
+                        historyChart.destroy();
+                    }
+                    
+                    historyChart = new Chart(ctx.getContext('2d'), {
+                        type: 'line',
+                        data: {
+                            labels: labels,
+                            datasets: [{
+                                label: 'Energy Consumption (kWh)',
+                                data: data,
+                                borderColor: '#667eea',
+                                backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                                borderWidth: 3,
+                                tension: 0.4,
+                                fill: true
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    display: true,
+                                    position: 'top'
+                                }
+                            },
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    title: {
+                                        display: true,
+                                        text: 'kWh'
+                                    }
+                                }
+                            }
+                        }
+                    });
+                }
+            }
+        } catch (error) {
+            console.error('Error loading history:', error);
+        }
+    }
+    
+    async function loadFullHistory() {
+        try {
+            const response = await fetch('/api/prediction_history');
+            const history = await response.json();
+            
+            if (history.length > 0) {
+                // Update stats
+                const consumptions = history.map(h => h.consumption);
+                const total = history.length;
+                const avg = (consumptions.reduce((a, b) => a + b, 0) / total).toFixed(1);
+                const lowest = Math.min(...consumptions).toFixed(1);
+                const highest = Math.max(...consumptions).toFixed(1);
+                
+                document.getElementById('totalPredictions').textContent = total;
+                document.getElementById('avgConsumption').textContent = avg;
+                document.getElementById('lowestConsumption').textContent = lowest;
+                document.getElementById('highestConsumption').textContent = highest;
+                
+                // Update chart
+                const labels = history.map(h => h.timestamp).reverse();
+                const data = history.map(h => h.consumption).reverse();
+                
+                const ctx = document.getElementById('historyChartFull');
+                if (ctx) {
+                    if (historyChartFull) {
+                        historyChartFull.destroy();
+                    }
+                    
+                    historyChartFull = new Chart(ctx.getContext('2d'), {
+                        type: 'line',
+                        data: {
+                            labels: labels,
+                            datasets: [{
+                                label: 'Energy Consumption (kWh)',
+                                data: data,
+                                borderColor: '#667eea',
+                                backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                                borderWidth: 3,
+                                tension: 0.4,
+                                fill: true
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    display: true,
+                                    position: 'top'
+                                }
+                            },
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    title: {
+                                        display: true,
+                                        text: 'kWh'
+                                    }
+                                }
+                            }
+                        }
+                    });
+                }
+            }
+        } catch (error) {
+            console.error('Error loading full history:', error);
+        }
+    }
+    
+    // Form submission handler - ONLY ONE, NO DUPLICATES
+    document.getElementById('predictionForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        console.log('Form submitted!');
+        
+        const formData = new FormData(this);
+        
+        try {
+            const response = await fetch('/prediction', {
+                method: 'POST',
+                body: formData
+            });
+            
+            const result = await response.json();
+            console.log('Result received:', result);
+            
+            // Show prediction value
+            document.getElementById('predictionValue').textContent = result.prediction;
+            document.getElementById('noResultsMessage').style.display = 'none';
+            document.getElementById('resultsContent').style.display = 'block';
+            
+            // Update comparison
+            document.getElementById('yourUsage').textContent = result.comparison.your_usage + ' kWh';
+            document.getElementById('typicalUsage').textContent = result.comparison.typical_usage + ' kWh';
+            document.getElementById('comparisonStatus').textContent = result.comparison.percentage + '% ' + result.comparison.status + ' average';
+            document.getElementById('comparisonStatus').className = 'stat-value ' + result.comparison.status;
+            
+            // Show suggestions
+            if (result.suggestions && result.suggestions.length > 0) {
+                document.getElementById('totalSavings').textContent = result.savings_potential;
+                document.getElementById('noSuggestionsMessage').style.display = 'none';
+                document.getElementById('suggestionsContent').style.display = 'block';
+                
+                const suggestionsList = document.getElementById('suggestionsList');
+                suggestionsList.innerHTML = '';
+                
+                result.suggestions.forEach(suggestion => {
+                    const card = document.createElement('div');
+                    card.className = 'suggestion-card';
+                    card.innerHTML = `
+                        <div class="suggestion-header">
+                            <div class="suggestion-icon">${suggestion.icon}</div>
+                            <div class="suggestion-category">${suggestion.category}</div>
+                        </div>
+                        <div class="suggestion-message">${suggestion.message}</div>
+                        <div class="suggestion-action">💡 ${suggestion.action}</div>
+                        <div class="suggestion-savings">💰 ${suggestion.savings}</div>
+                    `;
+                    suggestionsList.appendChild(card);
+                });
+            }
+            
+            // Load history chart
+            loadHistory();
+            
+            // Switch to results tab
+            switchTab('results');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Error making prediction. Please try again.');
+        }
+});
+
+// Load history on page load
+    loadHistory();
+</script>
+{% endblock %}
