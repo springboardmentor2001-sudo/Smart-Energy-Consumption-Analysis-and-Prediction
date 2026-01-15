@@ -462,7 +462,6 @@ Get all reviews
 
 ---
 
-**Made with ❤️ by Sahithi Karise
-the Smart Energy AI Team**
+**Made with ❤️ by Sahithi Karise, the Smart Energy AI Intern**
 
 **Last Updated**: January 2026
