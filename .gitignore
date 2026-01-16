@@ -83,3 +83,5 @@ Thumbs.db
 # Gemini / Custom
 .gemini/
 antigravity/
+node_modules/ 
+UI/node_modules/ 
