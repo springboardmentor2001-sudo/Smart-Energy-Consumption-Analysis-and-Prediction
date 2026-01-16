@@ -1,0 +1,977 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Energy Prediction Platform</title>
+    <link rel="stylesheet" href="style.css">
+    <script>
+        (function () {
+            const loggedIn = localStorage.getItem("isLoggedIn");
+            console.log("Auth check (dashboard):", loggedIn);
+
+            if (loggedIn !== "true") {
+                window.location.replace("login.html");
+            }
+        })();
+    </script>
+</head>
+<body>
+
+    
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="logo">
+                <div class="logo-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+                    </svg>
+                </div>
+                
+                <span class="logo-text">Smart Energy</span>
+            </div>
+            <button class="toggle-btn" id="toggleSidebar">
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="3" y1="12" x2="21" y2="12"></line>
+                    <line x1="3" y1="6" x2="21" y2="6"></line>
+                    <line x1="3" y1="18" x2="21" y2="18"></line>
+                </svg>
+            </button>
+        </div>
+        <nav class="sidebar-nav">
+
+            <a href="#" class="nav-item active" data-page="home">
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M3 10.5L12 3l9 7.5"></path>
+                    <path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10"></path>
+                </svg>
+
+                <span class="nav-label">Home</span>
+            </a>
+
+            
+            <a href="#" class="nav-item" data-page="prediction">
+             <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+            </svg>   
+                <span class="nav-label">Energy Prediction</span>
+            </a>
+
+            <a href="#" class="nav-item" data-page="dashboard">
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="3" width="7" height="9"></rect>
+                    <rect x="14" y="3" width="7" height="5"></rect>
+                    <rect x="14" y="12" width="7" height="9"></rect>
+                    <rect x="3" y="16" width="7" height="5"></rect>
+                </svg>
+                <span class="nav-label">Dashboard</span>
+            </a>
+            
+            <a href="#" class="nav-item" data-page="chatbot">
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                </svg>
+                <span class="nav-label">Chatbot Assistant</span>
+            </a>
+
+
+            <a href="#" class="nav-item" data-page="audit">
+    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M3 3h18v18H3z"></path>
+        <path d="M7 7h10"></path>
+        <path d="M7 11h10"></path>
+        <path d="M7 15h6"></path>
+    </svg>
+    <span class="nav-label">Energy Audit</span>
+</a>
+
+
+
+            
+            <a href="#" class="nav-item" data-page="feedback">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2.2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="9"/>
+                <path d="M8 14s1.5 2 4 2 4-2 4-2"/>
+                <line x1="9" y1="9" x2="9.01" y2="9"/>
+                <line x1="15" y1="9" x2="15.01" y2="9"/>
+            </svg>
+
+
+    
+                <span class="nav-label">Feedback</span>
+            </a>
+
+    
+
+
+            <a href="#" class="nav-item" data-page="settings">
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2.2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="3"/>
+                    <path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 0 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 0 1-4 0v-.2a1.7 1.7 0 0 0-1-1.5 1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1H3a2 2 0 0 1 0-4h.2a1.7 1.7 0 0 0 1.5-1 1.7 1.7 0 0 0-.3-1.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.9.3 1.7 1.7 0 0 0 1-1.5V3a2 2 0 0 1 4 0v.2a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.5 1H21a2 2 0 0 1 0 4h-.2a1.7 1.7 0 0 0-1.5 1z"/>
+                </svg>
+
+
+                <span class="nav-label">Settings</span>
+            </a>
+        </nav>
+        <div class="sidebar-footer">
+            <p>Smart Energy Prediction Platform</p>
+            <p>© 2026 All rights reserved</p>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-left">
+                <p class="header-subtitle">Current Page</p>
+                <h1 class="header-title" id="pageTitle">Dashboard</h1>
+            </div>
+            <div class="header-right">
+                <div class="status-badge" id="statusBadge">
+                    <svg class="status-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <polyline points="12 6 12 12 16 14"></polyline>
+                    </svg>
+                    <span class="status-label">Waiting for Input</span>
+                </div>
+                <div class="user-avatar">
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="12" cy="7" r="4"></circle>
+                    </svg>
+                </div>
+            </div>
+        </header>
+
+
+        
+
+
+        <!-- Page Container -->
+        <main class="page-container">
+
+            <!-- Home page -->
+
+        <div class="page active" id="home">
+            <div class="welcome-card">
+                    <div class="welcome-image">
+                        <img src="https://images.unsplash.com/photo-1720351320133-a9bb8fd0b500?w=1200" alt="Energy Grid">
+                        <div class="welcome-overlay"></div>
+                        <div class="welcome-content">
+                            <h2>Welcome to Smart Energy Prediction Platform</h2>
+                            <p>Upload Input Features so you get Energy consumption</p>
+                        </div>
+                    </div>
+                </div>
+
+<div class="card">
+    <h2 style="margin-bottom: 12px;">How the Model Works</h2>
+
+    <p class="card-subtitle" style="margin-bottom: 28px;">
+        End-to-end workflow of the machine learning based energy prediction system
+    </p>
+
+    <!-- TIMELINE CONTAINER -->
+    <div style="display: grid; grid-template-columns: 1fr; gap: 18px; position: relative;">
+
+        <!-- STEP 1 -->
+        <div class="info-box"
+     style="transition: transform 0.25s ease, box-shadow 0.25s ease;"
+     onmouseenter="this.style.transform='translateY(-2px)';this.style.boxShadow='0 4px 12px rgba(0,0,0,0.08)'"
+     onmouseleave="this.style.transform='none';this.style.boxShadow='none'">
+
+    <strong>Step 1: Input Collection</strong>
+    <p style="margin-top: 8px;">
+        User provides HVAC usage, occupancy, temperature, renewable energy, hour of day, and weekend flag.
+    </p>
+</div>
+
+
+        <!-- STEP 2 -->
+        <div class="info-box"
+     style="transition: transform 0.25s ease, box-shadow 0.25s ease;"
+     onmouseenter="this.style.transform='translateY(-2px)';this.style.boxShadow='0 4px 12px rgba(0,0,0,0.08)'"
+     onmouseleave="this.style.transform='none';this.style.boxShadow='none'">
+
+    <strong>Step 2: Data Processing</strong>
+    <p style="margin-top: 8px;">
+        Input data is validated, cleaned, and structured to match the trained model format.
+    </p>
+</div>
+
+
+        <!-- STEP 3 (HOVER + SVG) -->
+        <div class="info-box"
+             style="transition: transform 0.3s ease, box-shadow 0.3s ease;"
+             onmouseenter="this.style.transform='translateY(-4px)';this.style.boxShadow='0 8px 20px rgba(59,130,246,0.25)'"
+             onmouseleave="this.style.transform='none';this.style.boxShadow='none'">
+
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="3"></circle>
+                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06
+                             a2 2 0 1 1-2.83 2.83l-.06-.06
+                             a1.65 1.65 0 0 0-1.82-.33
+                             1.65 1.65 0 0 0-1 1.51V21
+                             a2 2 0 1 1-4 0v-.09
+                             a1.65 1.65 0 0 0-1-1.51
+                             1.65 1.65 0 0 0-1.82.33l-.06.06
+                             a2 2 0 1 1-2.83-2.83l.06-.06
+                             a1.65 1.65 0 0 0 .33-1.82
+                             1.65 1.65 0 0 0-1.51-1H3
+                             a2 2 0 1 1 0-4h.09
+                             a1.65 1.65 0 0 0 1.51-1
+                             1.65 1.65 0 0 0-.33-1.82l-.06-.06
+                             a2 2 0 1 1 2.83-2.83l.06.06
+                             a1.65 1.65 0 0 0 1.82.33
+                             a1.65 1.65 0 0 0 1-1.51V4
+                             a2 2 0 1 1 4 0v.09
+                             a1.65 1.65 0 0 0 1 1.51
+                             a1.65 1.65 0 0 0 1.82-.33l.06-.06
+                             a2 2 0 1 1 2.83 2.83l-.06.06
+                             a1.65 1.65 0 0 0-.33 1.82
+                             a1.65 1.65 0 0 0 1.51 1H21
+                             a2 2 0 1 1 0 4h-.09
+                             a1.65 1.65 0 0 0-1.51 1z"></path>
+                </svg>
+                <strong>Step 3: XGBoost Prediction</strong>
+            </div>
+
+            <p style="margin-top: 8px;">
+                The trained XGBoost regression model learns complex feature interactions and predicts energy consumption.
+            </p>
+        </div>
+
+        <!-- STEP 4 (HOVER + SVG + SUCCESS) -->
+        <div class="info-box success"
+             style="transition: transform 0.3s ease, box-shadow 0.3s ease;"
+             onmouseenter="this.style.transform='translateY(-4px)';this.style.boxShadow='0 8px 20px rgba(16,185,129,0.3)'"
+             onmouseleave="this.style.transform='none';this.style.boxShadow='none'">
+
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="2">
+                    <path d="M12 20V10"></path>
+                    <path d="M18 20V4"></path>
+                    <path d="M6 20v-4"></path>
+                </svg>
+                <strong>Step 4: Energy Output</strong>
+            </div>
+
+            <p style="margin-top: 8px;">
+                Final predicted energy consumption is displayed instantly in kilowatt-hours (kWh).
+            </p>
+        </div>
+
+    </div>
+
+
+    <!-- CTA BUTTON -->
+    <div style="margin-top: 28px; text-align: center;">
+       <button
+    class="btn-primary"
+    id="getStartedBtn"
+    type="button">
+    Get Started Prediction
+</button>
+
+
+    </div>
+</div>
+
+
+            
+</div>
+
+
+
+            <!-- Dashboard Page -->
+            <div class="page active" id="dashboard">
+                
+
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon blue">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <ellipse cx="12" cy="5" rx="9" ry="3"></ellipse>
+                                <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path>
+                                <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path>
+                            </svg>
+                        </div>
+                        <p class="stat-label">Model Status</p>
+                        <p class="stat-value" id="modelStatus">Active</p>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon purple">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>
+                            </svg>
+                        </div>
+                        <p class="stat-label">Total Predictions</p>
+                        <p class="stat-value" id="predictionCount">0</p>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon green">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+                            </svg>
+                        </div>
+                        <p class="stat-label">Energy Insights</p>
+                        <p class="stat-value" id="energyInsight">Awaiting data</p>
+
+                    </div>
+                    <div class="stat-card">
+                      <div class="stat-icon amber">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+                        </svg>
+                    </div>  
+                        <p class="stat-label">Model Name</p>
+                        <p class="stat-value" id="modelAccuracy">XGboost</p>
+                    </div>
+                </div>
+
+                
+
+
+            <div class="card">
+    <h2>Dataset Summary</h2>
+
+    <div class="info-box">
+        • Records: Historical building energy consumption data<br>
+        • Target Variable: Energy Consumption (kWh)<br>
+        • Input Features: HVAC, Occupancy, Temperature, Renewable Energy, Hour, Weekend
+    </div>
+</div>
+            <div class="card">
+                <h2>Feature Importance (XGBoost Model)</h2>
+                <p class="card-subtitle">
+                    Contribution of each feature to energy consumption prediction
+                </p>
+
+                <canvas id="featureImportanceChart" height="120"></canvas>
+            </div>
+
+
+
+            </div>
+
+            <!-- Energy Prediction Page -->
+            <div class="page" id="prediction">
+                <div class="prediction-grid">
+                    <div class="prediction-form-container">
+                        
+                        <div class="card">
+                            <div class="prediction-top-row">
+    <span class="prediction-title">Energy Prediction</span>
+
+    <!-- 📄 Upload icon -->
+    <label for="docUpload"
+           class="doc-upload-icon"
+           title="Upload document (PDF / TXT / DOC)">
+        <svg viewBox="0 0 24 24" width="22" height="22"
+             fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="7 10 12 5 17 10"/>
+            <line x1="12" y1="5" x2="12" y2="19"/>
+        </svg>
+    </label>
+
+    <input type="file"
+           id="docUpload"
+           accept=".pdf,.txt,.doc,.docx"
+           hidden />
+</div>
+<p id="uploadStatus" class="upload-status"></p>
+
+
+
+
+                            <h2>Runtime Input Parameters</h2>
+                            <p class="card-subtitle">Enter real-time values to generate energy consumption predictions</p>
+                            
+                            <form id="predictionForm">
+                                <!-- HVAC Usage -->
+                                <div class="form-group">
+                                    <label class="form-label">
+                                        <svg class="label-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"></path>
+                                        </svg>
+                                        HVAC Usage
+                                    </label>
+                                    <div class="toggle-container">
+                                        <label class="toggle">
+                                            <input type="checkbox" id="hvacToggle">
+                                            <span class="toggle-slider"></span>
+                                        </label>
+                                        <span class="toggle-label" id="hvacLabel">OFF</span>
+                                    </div>
+                                </div>
+
+                                <!-- Occupancy -->
+                                <div class="form-group">
+                                    <label class="form-label">
+                                        <svg class="label-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                                            <circle cx="9" cy="7" r="4"></circle>
+                                            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                                            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                                        </svg>
+                                        Occupancy (persons)
+                                    </label>
+                                    <input type="number" id="occupancy" class="form-input" placeholder="e.g., 150" min="0" required>
+                                </div>
+
+                                <!-- Temperature -->
+                                <div class="form-group">
+                                    <label class="form-label">
+                                        <svg class="label-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"></path>
+                                        </svg>
+                                        Temperature (°C)
+                                    </label>
+                                    <input type="number" id="temperature" class="form-input" placeholder="e.g., 22.5" step="0.1" required>
+                                </div>
+
+                                <!-- Renewable Energy Availability -->
+                                <div class="form-group">
+                                    <label class="form-label">
+                                        <svg class="label-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M12 2v6m0 6v6m5.2-13.2l-4.2 4.2m0 6l4.2 4.2M23 12h-6m-6 0H1"></path>
+                                        </svg>
+                                        Renewable Energy Availability (%)
+                                    </label>
+                                    <input type="number" id="renewable" class="form-input" placeholder="e.g., 45" min="0" max="100" required>
+                                </div>
+
+                                <!-- Hour of Day -->
+                                <div class="form-group">
+                                    <label class="form-label">
+                                        <svg class="label-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <circle cx="12" cy="12" r="10"></circle>
+                                            <polyline points="12 6 12 12 16 14"></polyline>
+                                        </svg>
+                                        Hour of Day (0-23)
+                                    </label>
+                                    <input type="number" id="hourOfDay" class="form-input" placeholder="e.g., 14" min="0" max="23" required>
+                                </div>
+
+                                <!-- Weekend Indicator -->
+                                <div class="form-group">
+                                    <label class="form-label">
+                                        <svg class="label-icon" viewBox="0 0 24 24" fill="none"     stroke="currentColor" stroke-width="2">
+                                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                                            <line x1="16" y1="2" x2="16" y2="6"></line>
+                                            <line x1="8" y1="2" x2="8" y2="6"></line>
+                                            <line x1="3" y1="10" x2="21" y2="10"></line>
+                                        </svg>
+                                        Weekend Indicator
+                                    </label>
+                                    <select id="weekend" class="form-input" required>
+                                        <option value="">
+                                            Select...</option>
+                                        <option value="0">Weekday</option>
+                                        <option value="1">Weekend</option>
+                                    </select>
+                                </div>
+
+                                <button type="submit" class="btn-primary" id="runPredictionBtn">
+                                    <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                                    </svg>
+                                    Run Prediction
+                                </button>
+                                <p class="warning-text" id="noModelWarning" style="display: none;">
+                                    Please upload a model first to run predictions
+                                </p>
+                                
+                            </form>
+                        </div>
+                    </div>
+
+                    
+
+                    <div class="prediction-output-container">
+                        <div class="card prediction-output">
+                            <h2>Prediction Output</h2>
+                            
+                            <!-- Loading State -->
+                            <div class="prediction-state loading-state" id="loadingState" style="display: none;">
+                                <div class="spinner"></div>
+                                <p class="state-title">Analyzing input parameters...</p>
+                                <p class="state-subtitle">Running ML inference</p>
+                            </div>
+
+                            <!-- Result State -->
+                            <div class="prediction-state result-state" id="resultState" style="display: none;">
+                                <div class="result-box">
+                                    <div class="result-header">
+                                        <svg class="result-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline>
+                                            <polyline points="17 6 23 6 23 12"></polyline>
+                                        </svg>
+                                        <p>Predicted Energy Consumption</p>
+                                    </div>
+                                    <p class="result-value" id="predictionResult">0</p>
+                                    <p class="result-unit">kWh</p>
+                                </div>
+                                <div class="result-details">
+                                    <div class="detail-item">
+                                        <span>Confidence Level</span>
+                                        <span class="detail-value success">High (87%)</span>
+                                    </div>
+                                    <div class="detail-item">
+                                        <span>Processing Time</span>
+                                        <span class="detail-value info">124ms</span>
+                                    </div>
+                                    <div class="detail-item">
+                                        <span>Model Version</span>
+                                        <span class="detail-value purple">v2.1.3</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Empty State -->
+                            <div class="prediction-state empty-prediction" id="emptyPrediction">
+                                <div class="empty-icon">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline>
+                                        <polyline points="17 6 23 6 23 12"></polyline>
+                                    </svg>
+                                </div>
+                                <p class="state-title">Awaiting Prediction</p>
+                                <p class="state-subtitle">Fill in the parameters and click "Run Prediction"</p>
+                            </div>
+                        </div>
+
+                        <div class="info-box">
+                            <p><strong>Note:</strong> All predictions are generated in real-time using your uploaded ML model. Results may vary based on model accuracy and input quality.</p>
+                        </div>
+
+                        
+                    </div>
+
+                    </div>
+
+<div class="card">
+    <h3>Bulk Energy Prediction (Upload Feature File)</h3>
+    <p style="color:#94a3b8; margin-bottom:12px;">
+        Upload a CSV file containing input features to predict energy consumption using the trained model.
+    </p>
+
+    <input
+        type="file"
+        id="offlineFile"
+        accept=".csv"
+        class="form-input"
+    />
+
+    <button
+        class="btn-primary"
+        style="margin-top:12px; width:auto;"
+        onclick="offlinePredict()"
+    >
+        Upload & Predict
+    </button>
+
+    <p id="offlineStatus" style="margin-top:10px; color:#94a3b8;"></p>
+</div>
+
+<div class="card" id="offlineTableCard" style="display:none;">
+    <h3>Offline Prediction Results</h3>
+
+    <div style="overflow-x:auto;">
+        <table class="prediction-table" id="offlineTable">
+            <thead>
+                <tr>
+                    <th>HVAC</th>
+                    <th>Occupancy</th>
+                    <th>Temperature</th>
+                    <th>Renewable</th>
+                    <th>Hour</th>
+                    <th>Weekend</th>
+                    <th>Predicted Energy (kWh)</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- rows injected by JavaScript -->
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<button
+    class="btn-primary"
+    id="downloadCsvBtn"
+    style="display:none; width:auto; margin-top:12px;"
+    onclick="downloadPredictedCSV()"
+>
+    Download Predicted CSV
+</button>
+
+
+
+</div>
+
+            
+
+            <!-- Chatbot Page -->
+            <div class="page" id="chatbot">
+                <div class="chat-container">
+                    <div class="card chat-card">
+                        <div class="chat-header">
+                            <div class="chat-avatar">
+                                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                                </svg>
+                            </div>
+                            <div>
+                                <h2>Energy Prediction Assistant</h2>
+                                <p>Always here to help you</p>
+                            </div>
+                        </div>
+
+                        <div class="chat-messages" id="chatMessages">
+                            <div class="message bot">
+                                <div class="message-avatar">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                                    </svg>
+                                </div>
+                                <div class="message-content">
+                                    <p>Hello! I'm your Energy Prediction Assistant. I can help you  understand how to use the platform, interpret predictions, and answer questions about energy consumption patterns. How can I help you today?</p>
+                                    <span class="message-time"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="chat-input-container">
+                            <button id="micBtn" title="Speak" class="mic-btn">
+                                <svg viewBox="0 0 24 24" width="20" height="20"
+                                    fill="none" stroke="currentColor" stroke-width="2"
+                                    stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+                                    <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                                    <line x1="12" y1="19" x2="12" y2="23"></line>
+                                    <line x1="8" y1="23" x2="16" y2="23"></line>
+                                </svg>
+                            </button>
+
+
+                            <button id="muteBtn" title="Mute / Unmute Voice" class="mute-btn">
+                                <svg id="volumeOnIcon" viewBox="0 0 24 24">
+                                    <path d="M11 5L6 9H2v6h4l5 4V5z"/>
+                                    <path d="M15.5 8.5a4 4 0 0 1 0 7"/>
+                                </svg>
+
+                                <svg id="volumeOffIcon" viewBox="0 0 24 24" style="display:none">
+                                    <path d="M11 5L6 9H2v6h4l5 4V5z"/>
+                                    <line x1="23" y1="9" x2="17" y2="15"/>
+                                    <line x1="17" y1="9" x2="23" y2="15"/>
+                                </svg>
+                            </button>
+
+                            <input type="text" id="chatInput" class="chat-input" placeholder="Ask me anything about energy predictions...">
+                            <button class="chat-send" id="chatSend">
+                                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <line x1="22" y1="2" x2="11" y2="13"></line>
+                                    <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                                </svg>
+                            </button>
+
+                      
+                            
+
+ 
+                    </div>
+
+                    
+                </div>
+            </div>
+        </div>
+
+
+        <!-- Energy Audit Report Page -->
+<div class="page" id="audit">
+    <div class="container audit-container">
+
+        <h1 class="audit-title">Energy Audit Report
+            <span class="badge badge-ai">AI Generated</span>
+
+        </h1>
+        <p class="audit-subtitle">
+            AI-generated analysis of energy usage, inefficiencies, and optimization actions
+        </p>
+
+        <!-- SCORE SECTION -->
+        <div class="card audit-score-card">
+            <div class="score-circle" id="efficiencyScore">--</div>
+            <div class="score-details">
+                <h3>Energy Efficiency Score</h3>
+                <p id="riskLevel">Risk Level: --</p>
+                <p class="score-note">
+                    Score is calculated based on ML prediction and usage patterns
+                </p>
+            </div>
+        </div>
+
+        <!-- SYSTEM OVERVIEW -->
+        <div class="card audit-card">
+            <h2>System Overview</h2>
+            <div class="overview-grid">
+                <span>HVAC Usage:</span><span id="auditHVAC">--</span>
+                <span>Occupancy:</span><span id="auditOccupancy">--</span>
+                <span>Temperature:</span><span id="auditTemp">-- °C</span>
+                <span>Renewable Energy:</span><span id="auditRenewable">-- %</span>
+                <span>Hour:</span><span id="auditHour">--</span>
+                <span>Weekend:</span><span id="auditWeekend">--</span>
+            </div>
+        </div>
+        <div class="card audit-card">
+    <h2>Feature Impact Analysis</h2>
+    <canvas id="auditFeatureChart" height="180"></canvas>
+</div>
+
+
+        <!-- ENERGY ANALYSIS -->
+        <div class="card audit-card">
+            <h2>Energy Consumption Analysis</h2>
+            <p class="analysis-value">
+                Predicted Energy Consumption:
+                <strong id="auditEnergy">-- kWh</strong>
+            </p>
+            <p id="analysisSummary">
+                Awaiting prediction input.
+            </p>
+        </div>
+
+        <!-- INEFFICIENCIES -->
+        <div class="card audit-card">
+            <h2>Inefficiency Detection</h2>
+            <ul id="inefficiencyList">
+                <li>No data available</li>
+            </ul>
+        </div>
+
+        <!-- RECOMMENDATIONS -->
+        <div class="card audit-card">
+            <h2>Optimization Recommendations</h2>
+            <ul id="recommendationList">
+                <li>No recommendations yet</li>
+            </ul>
+        </div>
+
+        <!-- ACTIONS -->
+        <div class="audit-actions">
+            <button class="btn-primary" id="generateAudit">
+                Generate Audit Report
+            </button>
+
+            <button class="btn-secondary" id="downloadPDF">
+                Download PDF Report
+            </button>
+        </div>
+
+    </div>
+</div>
+
+
+         
+
+
+            <!-- Feedback Page -->
+            
+
+<div class="page" id="feedback">
+    <div class="feedback-container">
+        <div class="card" id="feedbackForm">
+            <h2>We Value Your Feedback</h2>
+            <p class="card-subtitle">Help us improve the Smart Energy Prediction Platform by sharing your thoughts, suggestions, or reporting issues.</p>
+            
+            <form id="submitFeedback">
+                <div class="form-group">
+                    <label class="form-label">Name</label>
+                    <input type="text" class="form-input" placeholder="Your name" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Email</label>
+                    <input type="email" class="form-input" placeholder="your.email@example.com" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Category</label>
+                    <select class="form-input" required>
+                        <option value="">Select a category</option>
+                        <option value="bug">Bug Report</option>
+                        <option value="feature">Feature Request</option>
+                        <option value="improvement">Improvement Suggestion</option>
+                        <option value="general">General Feedback</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Message</label>
+                    <textarea class="form-textarea" rows="6" placeholder="Share your thoughts..." required></textarea>
+                </div>
+                <button type="submit" class="btn-primary">
+                    <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="22" y1="2" x2="11" y2="13"></line>
+                        <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                    </svg>
+                    Submit Feedback
+                </button>
+            </form>
+        </div>
+
+        <div class="card success-message" id="feedbackSuccess" style="display: none;">
+            <div class="success-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                    <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                </svg>
+            </div>
+            <h2>Thank You for Your Feedback!</h2>
+            <p>We've received your message and will review it shortly. Your input helps us improve the platform.</p>
+            <button class="btn-primary" id="submitAnother">Submit Another Feedback</button>
+        </div>
+    </div>
+</div>
+
+
+            
+
+            <!-- Settings Page -->
+            
+
+            <div class="page" id="settings">
+    <div class="settings-container">
+        <div class="card">
+            <h2>Profile Settings</h2>
+            <div class="profile-section">
+                <div class="profile-avatar-large">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="12" cy="7" r="4"></circle>
+                    </svg>
+                </div>
+                <div>
+                    <h3 id="profileName">Admin User</h3>
+                    <p id="profileEmail">admin@energyplatform.com</p>
+
+                </div>
+            </div>
+            <div class="settings-grid">
+                <div class="form-group">
+                    <label class="form-label">Full Name</label>
+                    <input id="setName" type="text" class="form-input">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Email</label>
+                    <input id="setEmail" type="email" class="form-input">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Organization</label>
+                    <input type="text" class="form-input" value="Energy Analytics Corp">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Role</label>
+                    <input type="text" class="form-input" value="System Administrator">
+                </div>
+            </div>
+            <button class="btn-primary" style="width: auto; margin-top: 16px;" onclick="updateProfile()">
+                <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                    <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                    <polyline points="7 3 7 8 15 8"></polyline>
+                </svg>
+                Save Changes
+            </button>
+        </div>
+
+        <div class="card">
+            
+            <div class="settings-list">
+                
+               
+
+                <div class="setting-item">
+                <div>
+                    <p class="setting-title">Theme</p>
+                    <p class="setting-desc">Switch between Dark and Light mode</p>
+                </div>
+                <label class="toggle">
+                    <input type="checkbox" id="themeToggle">
+                    <span class="toggle-slider"></span>
+                </label>
+                </div>
+
+                
+                
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>Preferences</h2>
+            <div class="settings-grid">
+                <div class="form-group">
+                    <label class="form-label">Time Zone</label>
+                    <select class="form-input">
+                        <option>UTC-8 (Pacific Time)</option>
+                        <option selected>UTC-5 (Eastern Time)</option>
+                        <option>UTC+0 (GMT)</option>
+                        <option>UTC+1 (Central European Time)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Date Format</label>
+                    <select class="form-input">
+                        <option>MM/DD/YYYY</option>
+                        <option selected>DD/MM/YYYY</option>
+                        <option>YYYY-MM-DD</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Temperature Unit</label>
+                    <select class="form-input">
+                        <option selected>Celsius (°C)</option>
+                        
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Energy Unit</label>
+                    <select class="form-input">
+                        <option selected>Kilowatt-hour (kWh)</option>
+                        
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        
+    </div>
+</div>
+</div>
+
+    </main>
+
+    <!-- Background Effects -->
+    <div class="bg-effect bg-effect-1"></div>
+    <div class="bg-effect bg-effect-2"></div>
+   
+
+
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+
+    <script src="script.js"></script>
+</body>
+</html>
