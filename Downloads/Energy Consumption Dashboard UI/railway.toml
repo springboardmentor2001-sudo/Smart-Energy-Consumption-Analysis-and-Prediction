@@ -1,0 +1,16 @@
+[build]
+builder = "NIXPACKS"
+
+[deploy]
+startCommand = "cd backend && python app.py"
+healthcheckPath = "/api/health"
+restartPolicyType = "ON_FAILURE"
+
+[build.env]
+PYTHON_VERSION = "3.12"
+
+[deploy.env]
+FLASK_ENV = "production"
+DEBUG = "False"
+HOST = "0.0.0.0"
+PORT = "8080"
