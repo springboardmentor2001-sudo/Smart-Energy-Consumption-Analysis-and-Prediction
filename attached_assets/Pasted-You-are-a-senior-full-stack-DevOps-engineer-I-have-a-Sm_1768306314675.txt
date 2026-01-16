@@ -1,0 +1,122 @@
+You are a senior full-stack DevOps engineer.
+
+I have a Smart Energy web application that was built ONLY to run on localhost.
+The project contains frontend + backend + Python ML in a single repository.
+
+Your task is to make this project PRODUCTION-READY and DEPLOYABLE on Render.com
+with MINIMAL configuration, while preserving 100% of existing functionality.
+
+IMPORTANT CONSTRAINTS:
+1. The project must continue to work exactly the same as before.
+2. Do NOT change business logic, ML logic, or UI behavior.
+3. Do NOT introduce breaking changes.
+4. Remove ALL traces of Replit completely.
+5. The final setup must work on Render without Docker.
+6. Use industry-standard best practices (environment variables, build output, API routing).
+
+-------------------------------------------------
+PROJECT STRUCTURE
+-------------------------------------------------
+client/
+ ├─ public/
+ │   ├─ features.json
+ │   └─ wattageConfig.json
+ ├─ src/
+ │   ├─ components/
+ │   ├─ hooks/
+ │   ├─ lib/
+ │   ├─ pages/
+ │   ├─ App.tsx
+ │   ├─ main.tsx
+ │   └─ index.css
+ ├─ index.html
+ ├─ vite.config.ts
+ ├─ tailwind.config.ts
+ └─ tsconfig.json
+
+server/
+ ├─ (Node / Express backend files here)
+
+predict_server.py   (Python ML prediction logic)
+.env
+package.json
+package-lock.json
+postcss.config.js
+drizzle.config.ts
+pyproject.toml
+uv.lock
+
+-------------------------------------------------
+WHAT YOU MUST DO
+-------------------------------------------------
+
+### 1️⃣ FRONTEND (React + Vite)
+- Replace ALL hardcoded `localhost` URLs with production-safe relative API paths.
+- Ensure frontend communicates with backend using `/api/*` routes.
+- Modify `vite.config.ts` so frontend build output goes into backend’s `dist` folder.
+- Ensure frontend can be served by Node backend in production.
+
+### 2️⃣ BACKEND (Node / Express)
+- Configure backend to:
+  - Serve the built frontend statically
+  - Handle API routes cleanly under `/api`
+  - Use `process.env.PORT` for Render compatibility
+- Ensure CORS works in production without exposing security risks.
+
+### 3️⃣ PYTHON ML (predict_server.py)
+- Ensure Python server works in production:
+  - Either as a subprocess called from Node
+  - OR as an internal API safely reachable by Node
+- Remove any localhost-only assumptions.
+- Ensure Render can execute Python correctly.
+
+### 4️⃣ ENVIRONMENT VARIABLES
+- Move ALL secrets, ports, and environment-specific values into `.env`
+- Ensure `.env` is NOT required at runtime on Render (Render injects vars).
+- Provide a `.env.example` file.
+
+### 5️⃣ REMOVE REPLIT COMPLETELY
+- Remove:
+  - `.replit`
+  - `replit.nix`
+  - Any Replit-specific paths, ports, comments, or environment checks
+  - Any `process.env.REPL_*` usage
+- Ensure project runs cleanly without Replit references.
+
+### 6️⃣ PACKAGE.JSON & SCRIPTS
+- Modify root `package.json` to include:
+  - A single `build` command that builds frontend correctly
+  - A single `start` command that runs the production backend
+- Ensure Render can deploy without custom commands.
+
+### 7️⃣ DEPLOYMENT DOCUMENTATION
+- Provide a clear, step-by-step Render deployment guide:
+  - Build command
+  - Start command
+  - Environment variables
+- Include verification checklist.
+
+-------------------------------------------------
+EXPECTED OUTPUT FORMAT
+-------------------------------------------------
+
+1. EXACT file-by-file code changes
+   - Show BEFORE → AFTER where needed
+   - Provide full updated files (not partial snippets)
+
+2. Final project structure after changes
+
+3. Final Render deployment steps
+
+4. Common pitfalls & how they were avoided
+
+-------------------------------------------------
+FINAL CHECK
+-------------------------------------------------
+Before responding, verify:
+- No localhost usage remains
+- No Replit references remain
+- App works in production exactly like localhost
+- Frontend, backend, and ML integrate correctly
+
+Proceed carefully and methodically.

@@ -1,0 +1,107 @@
+Build a responsive web page named "Upload & Predict".
+
+TECH STACK:
+- Frontend: React + TypeScript
+- Styling: Tailwind CSS
+- API communication: REST (fetch)
+- AI: Gemini API
+- ML Model: Backend REST endpoint
+
+-----------------------------------
+PAGE PURPOSE:
+Allow users to upload a PDF or TXT file containing structured numeric values.
+The system must extract values using Gemini AI and call a machine learning model
+only if the file content is valid.
+
+-----------------------------------
+UI REQUIREMENTS:
+
+1. Page Title:
+   "Upload File for Prediction"
+
+2. Description Text:
+   "Upload a PDF or TXT file containing the required values. The system will
+    automatically extract data and generate a prediction."
+
+3. File Upload Section:
+   - Accept ONLY .pdf and .txt files
+   - Drag-and-drop + click-to-upload
+   - Show selected file name
+   - Disable upload button after submission until process completes
+
+4. Action Button:
+   - Label: "Extract & Predict"
+   - Disabled until file is uploaded
+
+-----------------------------------
+PROCESS FLOW (VERY IMPORTANT):
+
+1. On button click:
+   - Send the uploaded file to backend endpoint `/api/extract-validate`
+   - Backend uses Gemini AI to extract and validate values
+
+2. If Gemini returns:
+   status = "VALID"
+   - Call ML model endpoint `/api/predict`
+   - Display predicted value clearly
+
+3. If Gemini returns:
+   status = "INVALID"
+   - Display:
+     "Prediction: null"
+   - Show user-friendly message:
+     "Uploaded file does not match the required input format."
+
+4. If user uploads a NEW file:
+   - Clear previous prediction
+   - Re-run full validation
+   - Do NOT reuse previous values
+
+-----------------------------------
+OUTPUT DISPLAY SECTION:
+
+- Prediction Card:
+  - Label: "Predicted Value"
+  - Value:
+      - Show numeric prediction if valid
+      - Show "null" if invalid
+  - Smooth loading animation while processing
+
+-----------------------------------
+ERROR HANDLING:
+- Unsupported file type → show error
+- Empty file → show error
+- API failure → show retry option
+- Gemini validation failure → return null
+
+-----------------------------------
+UX RULES:
+- No technical jargon
+- Clear instructions
+- Loading spinner while processing
+- Disable multiple submissions
+- Mobile responsive
+
+-----------------------------------
+CODE REQUIREMENTS:
+- Clean, readable, modular React code
+- Separate components:
+  - FileUploader
+  - PredictionResult
+  - Loader
+- Use environment variable for API URLs
+- No hardcoded secrets
+
+-----------------------------------
+SECURITY RULES:
+- Do NOT expose Gemini API key
+- Do NOT store uploaded files permanently
+- Do NOT log file contents on frontend
+
+-----------------------------------
+FINAL OUTPUT:
+Return:
+- Full React component code
+- Tailwind classes
+- Example API response handling
+- Ready-to-run page

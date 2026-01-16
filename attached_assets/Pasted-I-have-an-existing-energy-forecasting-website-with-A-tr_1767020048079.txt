@@ -1,0 +1,165 @@
+I have an existing energy forecasting website with:
+
+A trained XGBoost time-series forecasting model
+
+A backend /api/forecast endpoint
+
+A chatbot integrated into the UI
+
+Currently, the chatbot returns predictions directly as text, which is not correct UX.
+
+🎯 GOAL
+
+Redesign the chatbot so that it acts as an interactive prediction assistant, not a calculator.
+
+The chatbot should:
+
+Guide the user step-by-step
+
+Trigger the real forecasting API
+
+Display predictions consistently across chatbot and dashboard
+
+Explain predictions on demand
+
+✅ REQUIRED CHATBOT BEHAVIOR (STEP-BY-STEP)
+1️⃣ Chatbot entry point
+
+The chatbot must display an explicit option:
+
+“📊 Predict Energy Consumption”
+
+This must be a clickable action, not free text.
+
+2️⃣ Step-by-step guided input (inside chatbot)
+
+Once the user clicks Predict Energy Consumption, the chatbot should:
+
+Step 1 – Ask for date
+
+Use a date picker (future dates allowed)
+
+Step 2 – Ask for hour
+
+Dropdown or slider (0–23)
+
+Step 3 – Optional inputs (if supported by model)
+
+Temperature (numeric)
+
+Humidity (numeric)
+
+⚠️ The chatbot must NOT ask:
+
+HVAC ON/OFF
+
+Lighting ON/OFF
+
+Occupancy
+
+3️⃣ Backend trigger (CRITICAL)
+
+After collecting inputs, the chatbot must:
+
+Call the same /api/forecast endpoint used by the dashboard
+
+Send a clean JSON payload:
+
+{
+  "date": "2026-12-01",
+  "hour": 12,
+  "temperature": 30
+}
+
+
+❌ The chatbot must NOT generate predictions on its own
+❌ The chatbot must NOT hardcode formulas
+
+4️⃣ Unified prediction handling
+
+The API response should be:
+
+{
+  "predicted_energy": 67.3,
+  "unit": "kWh",
+  "confidence": "±1.2",
+  "explanation_id": "forecast_20261201_12"
+}
+
+
+The chatbot should:
+
+Display the numeric prediction
+
+Store the result in a shared application state
+
+📊 DASHBOARD SYNC (VERY IMPORTANT)
+
+When a prediction is generated via chatbot:
+
+✅ The same prediction must automatically appear in:
+
+Dashboard graphs
+
+Prediction history table
+
+Time-series visualization
+
+Chatbot and dashboard must share the same prediction store.
+
+🧠 EXPLANATION MODE (NEW FEATURE)
+
+The chatbot must also show:
+
+“🧠 Explain this prediction”
+
+When clicked:
+
+The chatbot explains:
+
+Which historical patterns influenced the result
+
+Time-of-day impact
+
+Trend vs average behavior
+
+Explanation must be read-only
+
+Explanation must NOT re-call the model
+
+This explanation should also be viewable:
+
+Inside chatbot
+
+On a separate “Prediction Details” page
+
+🔁 STATE MANAGEMENT RULES
+
+Prediction logic lives ONLY in backend
+
+Chatbot = UI + orchestration layer
+
+Dashboard = visualization layer
+
+All three use the same prediction ID
+
+🚫 STRICT RULES
+
+❌ Chatbot must not hallucinate predictions
+❌ Chatbot must not bypass backend
+❌ Chatbot must not accept appliance states
+❌ Chatbot must not alter model inputs
+
+✅ FINAL UX RESULT
+
+User experience should be:
+
+Click Predict Energy in chatbot
+
+Answer guided questions
+
+Get prediction
+
+See same prediction in dashboard
+
+Ask chatbot to explain it

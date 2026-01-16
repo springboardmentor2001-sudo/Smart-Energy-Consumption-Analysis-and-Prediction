@@ -1,0 +1,34 @@
+{
+  "baselineWatts": 200,
+  "applianceWattages": {
+    "HVACUsage__bin": 3500,
+    "LightingUsage__bin": 150,
+    "RefrigeratorUsage__bin": 150,
+    "WashingMachineUsage__bin": 500,
+    "DishwasherUsage__bin": 1800,
+    "OvenUsage__bin": 2500,
+    "TVUsage__bin": 100,
+    "ComputerUsage__bin": 300,
+    "WaterHeaterUsage__bin": 4500,
+    "ElectricVehicleUsage__bin": 7200
+  },
+  "weatherFactors": {
+    "Temperature": {
+      "baseTemp": 22,
+      "wattsPerDegree": 50
+    },
+    "Humidity": {
+      "baseHumidity": 50,
+      "wattsPerPercent": 5
+    },
+    "Occupancy": {
+      "wattsPerPerson": 100
+    },
+    "SquareFootage": {
+      "wattsPerSqFt": 0.05
+    },
+    "RenewableEnergy": {
+      "wattsReductionPerKw": -1000
+    }
+  }
+}
