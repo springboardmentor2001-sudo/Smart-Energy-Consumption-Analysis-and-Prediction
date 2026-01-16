@@ -26,6 +26,7 @@ def load_model():
             model = model_data['model']
         else:
             model = model_data
+        print(f"Model loaded successfully from {MODEL_PATH}")
         return True
     except Exception as e:
         print(f"Error loading model: {e}")
