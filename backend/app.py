@@ -18,7 +18,7 @@ LAST_PREDICTION = None
 
 # ---------------- APP INIT ----------------
 app = Flask(__name__)
-CORS(app) 
+CORS(app,resources={r"/*":{"origins":"*"}}) 
 
 # ---------------- LOAD ML MODEL ----------------
 MODEL_PATH = "model/energy_xgb_model.pkl"

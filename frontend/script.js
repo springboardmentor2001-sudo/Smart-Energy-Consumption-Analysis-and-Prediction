@@ -111,7 +111,7 @@ function initPredictionForm() {
         updateSystemStatus('predicting');
 
         try {
-            const response = await fetch("http://127.0.0.1:5000/predict", {
+            const response = await fetch("https://smart-energy-backend.onrender.com/predict", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(payload)
@@ -194,7 +194,7 @@ function updateSystemStatus(status) {
 async function sendMessage(text) {
     if (!text.trim()) return;
 
-    const backendUrl = "http://127.0.0.1:5000"; // Define your backend base URL
+    const backendUrl = "https://smart-energy-backend.onrender.com";
     addMessage(text, "user");
     document.getElementById("chatInput").value = "";
 
@@ -236,8 +236,8 @@ async function sendMessage(text) {
         
 
     } catch (err) {
-        console.error("❌ Fetch error:", err);
-        addMessage("⚠️ Chat server not reachable. Check if Flask is running on port 5000.", "bot");
+        console.error(" Fetch error:", err);
+        addMessage(" Chat server not reachable. Check if Flask is running on port 5000.", "bot");
     }
 }
 
@@ -247,7 +247,7 @@ function initChatbot() {
     const chatSend = document.getElementById("chatSend");
 
     if (!chatInput || !chatSend) {
-        console.error("❌ Chat input or button not found");
+        console.error(" Chat input or button not found");
         return;
     }
 
@@ -310,7 +310,7 @@ function initFeedback() {
             message: feedbackForm.querySelector("textarea").value
         };
 
-        const res = await fetch("http://127.0.0.1:5000/submit-feedback", {
+        const res = await fetch("https://smart-energy-backend.onrender.com/submit-feedback", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payload)
@@ -564,7 +564,7 @@ async function offlinePredict() {
     status.textContent = "Uploading file and predicting...";
 
     try {
-        const res = await fetch("http://127.0.0.1:5000/offline-predict", {
+        const res = await fetch("https://smart-energy-backend.onrender.com/offline-predict", {
             method: "POST",
             body: formData
         });
@@ -771,7 +771,7 @@ document.getElementById("docUpload")?.addEventListener("change", async (e) => {
     formData.append("file", file);
 
     try {
-        const res = await fetch("http://127.0.0.1:5000/extract-inputs", {
+        const res = await fetch("https://smart-energy-backend.onrender.com/extract-inputs", {
             method: "POST",
             body: formData
         });
@@ -800,7 +800,7 @@ document.getElementById("docUpload")?.addEventListener("change", async (e) => {
 
 document.getElementById("generateAudit").addEventListener("click", async () => {
     try {
-        const res = await fetch("http://127.0.0.1:5000/audit");
+        const res = await fetch("https://smart-energy-backend.onrender.com/audit");
         const data = await res.json();
 
         if (data.status !== "success") {
@@ -875,7 +875,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     pdfBtn.addEventListener("click", () => {
         window.open(
-            "http://127.0.0.1:5000/audit-pdf",
+            "https://smart-energy-backend.onrender.com/audit-pdf",
             "_blank"
         );
     });
