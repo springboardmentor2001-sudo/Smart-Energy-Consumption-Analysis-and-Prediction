@@ -477,7 +477,83 @@ export async function registerRoutes(
 
       const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY as string);
       let contextInfo = "";
+      let predictionResult = null;
 
+      // Check if user is asking for a prediction and extract parameters if needed
+      const extractionPrompt = `Analyze this user message and determine if they're asking for an energy consumption prediction.
+      
+      User message: "${parsed.message}"
+      
+      If they are asking for a prediction, extract these parameters from their message:
+      - HVACUsage: "on" or "off" (default: "off")
+      - LightingUsage: "on" or "off" (default: "off")
+      - Holiday: "on" or "off" (default: "off")
+      - Temperature: number in °C (default: 22)
+      - Humidity: percentage (default: 50)
+      - Occupancy: number of people (default: 3)
+      - SquareFootage: building size (default: 1500)
+      - RenewableEnergy: percentage (default: 0)
+      
+      Return JSON:
+      {
+        "isPredictionRequest": true/false,
+        "appliances": {
+          "HVACUsage": "on"/"off",
+          "LightingUsage": "on"/"off",
+          "Holiday": "on"/"off"
+        },
+        "weather": {
+          "Temperature": number,
+          "Humidity": number,
+          "Occupancy": number,
+          "SquareFootage": number,
+          "RenewableEnergy": number
+        }
+      }
+      Return ONLY JSON.`;
+
+      try {
+        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+        const extractionResult = await model.generateContent(extractionPrompt);
+        const extractionText = extractionResult.response.text();
+        const extractionMatch = extractionText.match(/\{[\s\S]*\}/);
+        
+        if (extractionMatch) {
+          const extractedData = JSON.parse(extractionMatch[0]);
+          
+          // If user is asking for a prediction, call the model
+          if (extractedData.isPredictionRequest) {
+            try {
+              predictionResult = await calculatePrediction(
+                extractedData.appliances,
+                extractedData.weather
+              );
+              
+              contextInfo += `\n\n🔋 ENERGY PREDICTION RESULT:\nBased on your inputs:`;
+              contextInfo += `\n- HVAC: ${extractedData.appliances.HVACUsage}`;
+              contextInfo += `\n- Lighting: ${extractedData.appliances.LightingUsage}`;
+              contextInfo += `\n- Temperature: ${extractedData.weather.Temperature}°C`;
+              contextInfo += `\n- Humidity: ${extractedData.weather.Humidity}%`;
+              contextInfo += `\n- Occupancy: ${extractedData.weather.Occupancy} people`;
+              contextInfo += `\n\n⚡ PREDICTED CONSUMPTION:\n${predictionResult.prediction_watts}W (${predictionResult.prediction_kw}kW)`;
+              
+              if (predictionResult.breakdown && Object.keys(predictionResult.breakdown).length > 0) {
+                contextInfo += "\n\nBreakdown by appliance:";
+                Object.entries(predictionResult.breakdown).forEach(([key, value]) => {
+                  contextInfo += `\n- ${key.replace(/Usage$/, "")}: ${value}W`;
+                });
+              }
+            } catch (predError) {
+              console.error("[CHAT] Prediction error:", predError);
+              contextInfo += "\n\n⚠️ Could not generate prediction at this time. Please try again later.";
+            }
+          }
+        }
+      } catch (extractError) {
+        console.error("[CHAT] Parameter extraction error:", extractError);
+      }
+
+      // Add existing context if provided
       if (parsed.context?.currentPrediction) {
         contextInfo += `\n\nCurrent prediction: ${parsed.context.currentPrediction.prediction_watts}W (${parsed.context.currentPrediction.prediction_kw}kW)`;
         if (parsed.context.currentPrediction.breakdown) {
@@ -508,6 +584,17 @@ export async function registerRoutes(
       - "Upload & Predict": Upload files (PDF/TXT) to automatically extract building parameters and get predictions.
       - "Analytics": Visual charts of consumption history.
       - "Chat": This current page where users can get advice.
+
+      ENERGY PREDICTION CAPABILITIES:
+      You can help predict energy consumption based on:
+      - Weather conditions (Temperature in °C, Humidity in %)
+      - Building characteristics (Square footage, Building type - Residential/Commercial)
+
+      When users ask about energy consumption predictions:
+      - Use the current prediction context if available
+      - Ask clarifying questions about appliances, weather, or building parameters if needed
+      - Provide estimates and recommendations to help reduce consumption
+      - Suggest using the "Predict" page for manual predictions or "Upload & Predict" for automated analysis
 
       Context: ${contextInfo}`;
 
