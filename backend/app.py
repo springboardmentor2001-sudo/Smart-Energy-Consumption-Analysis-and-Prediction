@@ -753,6 +753,10 @@ def submit_feedback():
 
 
 
+# if __name__ == "__main__":
+#     init_feedback_db()
+#     app.run(debug=True, use_reloader=False, port=5000)
+
 if __name__ == "__main__":
     init_feedback_db()
-    app.run(debug=True, use_reloader=False, port=5000)
+    app.run()
