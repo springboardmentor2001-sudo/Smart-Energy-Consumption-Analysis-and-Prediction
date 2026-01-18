@@ -1,6 +1,8 @@
 from flask import Flask, request, jsonify, send_file
 from flask_cors import CORS
-from google.genai import Client
+# from google.genai import Client
+import google.generativeai as genai
+import os
 import pickle
 import numpy as np
 import os
@@ -33,11 +35,15 @@ except Exception as e:
 
 # ---------------- GEMINI CONFIG ----------------
 # CRITICAL: Replace 'YOUR_API_KEY_HERE' with your actual key if the environment variable isn't working
-API_KEY = os.getenv("GEMINI_API_KEY") 
-client = Client(api_key=API_KEY)
-print(f"DEBUG: API Key found: {bool(os.getenv('GEMINI_API_KEY'))}")
-MODEL_NAME = "gemini-2.0-flash-lite-preview-02-05" 
+# API_KEY = os.getenv("GEMINI_API_KEY") 
+# client = Client(api_key=API_KEY)
+# print(f"DEBUG: API Key found: {bool(os.getenv('GEMINI_API_KEY'))}")
+# MODEL_NAME = "gemini-2.0-flash-lite-preview-02-05" 
 
+genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+model=genai.GenerativeModel("gemini-2.0-flash-lite-preview-02-05")
+response=model.generate_content(prompt)
+text=response.text
 # ---------------- FEATURE ORDER ----------------
 FEATURE_ORDER = ["HVACUsage", "Occupancy", "Temperature", "RenewableEnergy", "Hour", "IsWeekend"]
 
