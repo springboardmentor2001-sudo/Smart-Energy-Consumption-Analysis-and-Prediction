@@ -3,7 +3,7 @@ import pandas as pd
 import os
 import sys
 from datetime import datetime
-from google import genai
+import google.generativeai as genai
 
 # ---------- Unified Backend Path ----------
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -13,7 +13,8 @@ sys.path.append(PROJECT_ROOT)
 
 from backend.config import GEMINI_API_KEY
 
-client = genai.Client(api_key=GEMINI_API_KEY)
+genai.configure(api_key=GEMINI_API_KEY)
+model = genai.GenerativeModel("gemini-1.5-flash")
 
 ENERGY_KEYWORDS = [
     "energy", "power", "hvac", "ac", "cooling", "heating",
@@ -91,4 +92,5 @@ def app():
         st.markdown(f"🧑 **You:** {row['User']}")
         st.markdown(f"🤖 **AI:** {row['AI']}")
         st.markdown("---")
+
 
