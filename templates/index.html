@@ -1,29 +1,31 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Smart Energy Consumption Analysis | AI-Powered Dashboard</title>
-    
+    <title>Smart Energy - Simple & Easy</title>
+
     <!-- Bootstrap 5.3 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    
+
     <!-- Font Awesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    
+
     <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-    
+
     <!-- Custom CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
+
 <body>
-    <!-- Navigation -->
+    <!-- Simple Navigation -->
     <nav class="navbar navbar-expand-lg navbar-dark fixed-top glass-nav">
-        <div class="container-fluid px-4">
+        <div class="container">
             <a class="navbar-brand fw-bold" href="#">
                 <i class="fas fa-bolt text-warning me-2"></i>
                 Smart Energy
@@ -34,242 +36,108 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item">
-                        <a class="nav-link" href="#dashboard"><i class="fas fa-chart-line me-1"></i> Dashboard</a>
+                        <a class="nav-link" href="#predict">Predict</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="#prediction"><i class="fas fa-brain me-1"></i> Predict</a>
+                        <a class="nav-link" href="#dashboard">Dashboard</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="#analysis"><i class="fas fa-chart-pie me-1"></i> Analysis</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#suggestions"><i class="fas fa-lightbulb me-1"></i> Tips</a>
+                        <a class="nav-link" href="#tips">Tips</a>
                     </li>
                 </ul>
             </div>
         </div>
     </nav>
 
-    <!-- Hero Section -->
+    <!-- Hero Section - Simplified -->
     <section class="hero-section">
         <div class="container">
             <div class="row align-items-center min-vh-100">
-                <div class="col-lg-6 text-white">
-                    <h1 class="display-3 fw-bold mb-4 animate-fade-in">
-                        Smart Energy<br>
-                        <span class="gradient-text">Consumption Analysis</span>
+                <div class="col-lg-8 mx-auto text-center text-white">
+                    <h1 class="display-4 fw-bold mb-4">
+                        Monitor Your Energy Usage
                     </h1>
-                    <p class="lead mb-4 animate-fade-in-delay">
-                        AI-powered energy prediction and optimization using advanced LSTM neural networks.
-                        Monitor, analyze, and reduce your energy consumption intelligently.
+                    <p class="lead mb-5">
+                        Get AI-powered predictions and save money on your energy bills
                     </p>
-                    <div class="d-flex gap-3 animate-fade-in-delay-2">
-                        <a href="#prediction" class="btn btn-primary btn-lg px-4 py-3 rounded-pill">
-                            <i class="fas fa-rocket me-2"></i> Get Started
-                        </a>
-                        <a href="#dashboard" class="btn btn-outline-light btn-lg px-4 py-3 rounded-pill">
-                            <i class="fas fa-chart-bar me-2"></i> View Dashboard
-                        </a>
-                    </div>
-                </div>
-                <div class="col-lg-6">
-                    <div class="hero-stats-grid">
-                        <div class="stat-card glass-card animate-float">
-                            <div class="stat-icon bg-gradient-primary">
-                                <i class="fas fa-bolt"></i>
-                            </div>
-                            <h3 class="stat-value" id="totalRecords">0</h3>
-                            <p class="stat-label">Data Points</p>
-                        </div>
-                        <div class="stat-card glass-card animate-float-delay">
-                            <div class="stat-icon bg-gradient-success">
-                                <i class="fas fa-leaf"></i>
-                            </div>
-                            <h3 class="stat-value" id="avgConsumption">0</h3>
-                            <p class="stat-label">Avg kWh</p>
-                        </div>
-                        <div class="stat-card glass-card animate-float-delay-2">
-                            <div class="stat-icon bg-gradient-warning">
-                                <i class="fas fa-brain"></i>
-                            </div>
-                            <h3 class="stat-value">95%</h3>
-                            <p class="stat-label">AI Accuracy</p>
-                        </div>
-                        <div class="stat-card glass-card animate-float-delay-3">
-                            <div class="stat-icon bg-gradient-danger">
-                                <i class="fas fa-chart-line"></i>
-                            </div>
-                            <h3 class="stat-value" id="maxConsumption">0</h3>
-                            <p class="stat-label">Peak kWh</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="scroll-indicator">
-            <i class="fas fa-chevron-down"></i>
-        </div>
-    </section>
-
-    <!-- Dashboard Section -->
-    <section id="dashboard" class="section-padding">
-        <div class="container">
-            <div class="section-header text-center mb-5">
-                <h2 class="display-5 fw-bold mb-3">
-                    <i class="fas fa-chart-line text-primary me-3"></i>
-                    Energy Dashboard
-                </h2>
-                <p class="lead text-muted">Real-time insights and historical trends</p>
-            </div>
-
-            <div class="row g-4 mb-4">
-                <!-- Historical Consumption Chart -->
-                <div class="col-lg-8">
-                    <div class="glass-card p-4">
-                        <h5 class="card-title mb-4">
-                            <i class="fas fa-chart-area text-primary me-2"></i>
-                            Historical Energy Consumption
-                        </h5>
-                        <canvas id="historicalChart" height="80"></canvas>
-                    </div>
-                </div>
-
-                <!-- Hourly Pattern -->
-                <div class="col-lg-4">
-                    <div class="glass-card p-4">
-                        <h5 class="card-title mb-4">
-                            <i class="fas fa-clock text-warning me-2"></i>
-                            Hourly Pattern
-                        </h5>
-                        <canvas id="hourlyChart"></canvas>
-                    </div>
-                </div>
-            </div>
-
-            <div class="row g-4">
-                <!-- Daily Pattern -->
-                <div class="col-lg-6">
-                    <div class="glass-card p-4">
-                        <h5 class="card-title mb-4">
-                            <i class="fas fa-calendar-week text-success me-2"></i>
-                            Weekly Pattern
-                        </h5>
-                        <canvas id="dailyChart"></canvas>
-                    </div>
-                </div>
-
-                <!-- Quick Stats -->
-                <div class="col-lg-6">
-                    <div class="glass-card p-4">
-                        <h5 class="card-title mb-4">
-                            <i class="fas fa-info-circle text-info me-2"></i>
-                            Quick Statistics
-                        </h5>
-                        <div class="stats-list">
-                            <div class="stat-item">
-                                <span class="stat-label">Average Temperature:</span>
-                                <span class="stat-value" id="avgTemp">--</span>
-                            </div>
-                            <div class="stat-item">
-                                <span class="stat-label">Average Humidity:</span>
-                                <span class="stat-value" id="avgHumidity">--</span>
-                            </div>
-                            <div class="stat-item">
-                                <span class="stat-label">Average Occupancy:</span>
-                                <span class="stat-value" id="avgOccupancy">--</span>
-                            </div>
-                            <div class="stat-item">
-                                <span class="stat-label">Std Deviation:</span>
-                                <span class="stat-value" id="stdConsumption">--</span>
-                            </div>
-                        </div>
-                    </div>
+                    <a href="#predict" class="btn btn-primary btn-lg px-5 py-3 rounded-pill">
+                        <i class="fas fa-bolt me-2"></i> Start Predicting
+                    </a>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- Prediction Section -->
-    <section id="prediction" class="section-padding bg-gradient-section">
+    <!-- Prediction Section - Simplified -->
+    <section id="predict" class="section-padding">
         <div class="container">
-            <div class="section-header text-center mb-5">
-                <h2 class="display-5 fw-bold mb-3 text-white">
-                    <i class="fas fa-brain text-warning me-3"></i>
-                    AI Energy Prediction
-                </h2>
-                <p class="lead text-white-50">Enter parameters to predict energy consumption</p>
+            <div class="text-center mb-5">
+                <h2 class="display-6 fw-bold mb-3">Predict Your Energy Usage</h2>
+                <p class="text-muted">Enter your details below to get an instant prediction</p>
             </div>
 
             <div class="row justify-content-center">
-                <div class="col-lg-10">
-                    <div class="glass-card p-5">
+                <div class="col-lg-8">
+                    <div class="glass-card p-4 p-md-5">
                         <form id="predictionForm">
-                            <div class="row g-4">
+                            <!-- Basic Info -->
+                            <h5 class="mb-4"><i class="fas fa-home me-2 text-primary"></i> Basic Information</h5>
+                            <div class="row g-3 mb-4">
                                 <div class="col-md-6">
-                                    <label class="form-label fw-semibold">
-                                        <i class="fas fa-thermometer-half text-danger me-2"></i>
-                                        Temperature (°C)
-                                    </label>
-                                    <input type="number" class="form-control form-control-lg" name="Temperature" 
-                                           step="0.1" min="15" max="35" value="25" required>
+                                    <label class="form-label">Temperature (°C)</label>
+                                    <input type="number" class="form-control form-control-lg" name="Temperature"
+                                        value="25" min="15" max="35" step="0.1" required>
+                                    <small class="text-muted">Current room temperature</small>
                                 </div>
                                 <div class="col-md-6">
-                                    <label class="form-label fw-semibold">
-                                        <i class="fas fa-tint text-info me-2"></i>
-                                        Humidity (%)
-                                    </label>
-                                    <input type="number" class="form-control form-control-lg" name="Humidity" 
-                                           step="0.1" min="20" max="80" value="50" required>
+                                    <label class="form-label">Humidity (%)</label>
+                                    <input type="number" class="form-control form-control-lg" name="Humidity" value="50"
+                                        min="20" max="80" step="0.1" required>
+                                    <small class="text-muted">Current humidity level</small>
                                 </div>
                                 <div class="col-md-6">
-                                    <label class="form-label fw-semibold">
-                                        <i class="fas fa-home text-primary me-2"></i>
-                                        Square Footage
-                                    </label>
-                                    <input type="number" class="form-control form-control-lg" name="SquareFootage" 
-                                           step="1" min="500" max="3000" value="1500" required>
+                                    <label class="form-label">Home Size (sq ft)</label>
+                                    <input type="number" class="form-control form-control-lg" name="SquareFootage"
+                                        value="1500" min="500" max="3000" required>
+                                    <small class="text-muted">Total square footage</small>
                                 </div>
                                 <div class="col-md-6">
-                                    <label class="form-label fw-semibold">
-                                        <i class="fas fa-users text-success me-2"></i>
-                                        Occupancy
-                                    </label>
-                                    <input type="number" class="form-control form-control-lg" name="Occupancy" 
-                                           step="1" min="0" max="10" value="5" required>
+                                    <label class="form-label">Number of People</label>
+                                    <input type="number" class="form-control form-control-lg" name="Occupancy" value="3"
+                                        min="0" max="10" required>
+                                    <small class="text-muted">People at home</small>
                                 </div>
+                            </div>
+
+                            <!-- Devices -->
+                            <h5 class="mb-4"><i class="fas fa-plug me-2 text-success"></i> Devices</h5>
+                            <div class="row g-3 mb-4">
                                 <div class="col-md-4">
-                                    <label class="form-label fw-semibold">
-                                        <i class="fas fa-wind text-primary me-2"></i>
-                                        HVAC Usage
-                                    </label>
+                                    <label class="form-label">Air Conditioning</label>
                                     <select class="form-select form-select-lg" name="HVACUsage" required>
                                         <option value="On">On</option>
                                         <option value="Off">Off</option>
                                     </select>
                                 </div>
                                 <div class="col-md-4">
-                                    <label class="form-label fw-semibold">
-                                        <i class="fas fa-lightbulb text-warning me-2"></i>
-                                        Lighting Usage
-                                    </label>
+                                    <label class="form-label">Lights</label>
                                     <select class="form-select form-select-lg" name="LightingUsage" required>
                                         <option value="On">On</option>
                                         <option value="Off">Off</option>
                                     </select>
                                 </div>
                                 <div class="col-md-4">
-                                    <label class="form-label fw-semibold">
-                                        <i class="fas fa-solar-panel text-success me-2"></i>
-                                        Renewable Energy
-                                    </label>
-                                    <input type="number" class="form-control form-control-lg" name="RenewableEnergy" 
-                                           step="0.1" min="0" max="30" value="15" required>
+                                    <label class="form-label">Solar Power (%)</label>
+                                    <input type="number" class="form-control form-control-lg" name="RenewableEnergy"
+                                        value="15" min="0" max="30" step="0.1" required>
                                 </div>
+                            </div>
+
+                            <!-- Date Info -->
+                            <h5 class="mb-4"><i class="fas fa-calendar me-2 text-warning"></i> Date</h5>
+                            <div class="row g-3 mb-4">
                                 <div class="col-md-6">
-                                    <label class="form-label fw-semibold">
-                                        <i class="fas fa-calendar-day text-info me-2"></i>
-                                        Day of Week
-                                    </label>
+                                    <label class="form-label">Day of Week</label>
                                     <select class="form-select form-select-lg" name="DayOfWeek" required>
                                         <option value="Monday">Monday</option>
                                         <option value="Tuesday">Tuesday</option>
@@ -281,10 +149,7 @@
                                     </select>
                                 </div>
                                 <div class="col-md-6">
-                                    <label class="form-label fw-semibold">
-                                        <i class="fas fa-umbrella-beach text-danger me-2"></i>
-                                        Holiday
-                                    </label>
+                                    <label class="form-label">Holiday?</label>
                                     <select class="form-select form-select-lg" name="Holiday" required>
                                         <option value="No">No</option>
                                         <option value="Yes">Yes</option>
@@ -292,10 +157,9 @@
                                 </div>
                             </div>
 
-                            <div class="text-center mt-5">
+                            <div class="text-center mt-4">
                                 <button type="submit" class="btn btn-primary btn-lg px-5 py-3 rounded-pill">
-                                    <i class="fas fa-magic me-2"></i>
-                                    Predict Energy Consumption
+                                    <i class="fas fa-magic me-2"></i> Get Prediction
                                 </button>
                             </div>
                         </form>
@@ -306,12 +170,12 @@
                                 <div class="result-icon">
                                     <i class="fas fa-bolt"></i>
                                 </div>
-                                <h3 class="result-title">Predicted Energy Consumption</h3>
+                                <h3 class="result-title">Your Predicted Energy Usage</h3>
                                 <div class="result-value">
                                     <span id="predictionValue">0</span>
                                     <span class="result-unit">kWh</span>
                                 </div>
-                                <div class="result-details" id="predictionDetails"></div>
+                                <p class="text-white-50 mt-3">Based on your current settings</p>
                             </div>
                         </div>
                     </div>
@@ -320,95 +184,182 @@
         </div>
     </section>
 
-    <!-- Device Analysis Section -->
-    <section id="analysis" class="section-padding">
+    <!-- Dashboard Section - Easy Analysis --!>
+    <section id="dashboard" class="section-padding bg-light">
         <div class="container">
-            <div class="section-header text-center mb-5">
-                <h2 class="display-5 fw-bold mb-3">
-                    <i class="fas fa-chart-pie text-primary me-3"></i>
-                    Device-Wise Analysis
-                </h2>
-                <p class="lead text-muted">Understand consumption by device and factor</p>
+            <div class="text-center mb-5">
+                <h2 class="display-6 fw-bold mb-3">Your Energy Analysis</h2>
+                <p class="text-muted">Easy-to-understand insights about your energy usage</p>
             </div>
 
-            <div class="row g-4">
-                <div class="col-lg-4">
-                    <div class="glass-card p-4">
-                        <h5 class="card-title mb-4">
-                            <i class="fas fa-wind text-primary me-2"></i>
-                            HVAC Impact
-                        </h5>
-                        <canvas id="hvacChart"></canvas>
-                        <div class="mt-3 text-center">
-                            <p class="mb-1 text-muted">Average Impact</p>
-                            <h4 class="text-primary" id="hvacImpact">-- kWh</h4>
+            <!-- Simple Analysis Cards -->
+    <div class="row g-4 mb-4">
+        <!-- Average Usage Card -->
+        <div class="col-md-4">
+            <div class="analysis-card">
+                <div class="analysis-icon bg-primary">
+                    <i class="fas fa-bolt"></i>
+                </div>
+                <h3 class="analysis-value" id="avgUsage">--</h3>
+                <p class="analysis-label">Average Daily Usage</p>
+                <p class="analysis-desc">Your typical energy consumption per day</p>
+            </div>
+        </div>
+
+        <!-- Peak Usage Card -->
+        <div class="col-md-4">
+            <div class="analysis-card">
+                <div class="analysis-icon bg-warning">
+                    <i class="fas fa-arrow-up"></i>
+                </div>
+                <h3 class="analysis-value" id="peakUsage">--</h3>
+                <p class="analysis-label">Highest Usage</p>
+                <p class="analysis-desc">Your maximum energy consumption recorded</p>
+            </div>
+        </div>
+
+        <!-- Savings Potential Card -->
+        <div class="col-md-4">
+            <div class="analysis-card">
+                <div class="analysis-icon bg-success">
+                    <i class="fas fa-piggy-bank"></i>
+                </div>
+                <h3 class="analysis-value" id="savingsPotential">--</h3>
+                <p class="analysis-label">Potential Savings</p>
+                <p class="analysis-desc">How much you could save per month</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- When You Use Most Energy -->
+    <div class="row g-4 mb-4">
+        <div class="col-12">
+            <div class="insight-card">
+                <h4 class="mb-4"><i class="fas fa-lightbulb text-warning me-2"></i> When Do You Use Most Energy?</h4>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="time-insight">
+                            <div class="time-icon">🌅</div>
+                            <div>
+                                <h5>Peak Hour</h5>
+                                <p class="mb-0" id="peakHour">Loading...</p>
+                                <small class="text-muted">Highest energy usage time</small>
+                            </div>
                         </div>
                     </div>
-                </div>
-
-                <div class="col-lg-4">
-                    <div class="glass-card p-4">
-                        <h5 class="card-title mb-4">
-                            <i class="fas fa-lightbulb text-warning me-2"></i>
-                            Lighting Impact
-                        </h5>
-                        <canvas id="lightingChart"></canvas>
-                        <div class="mt-3 text-center">
-                            <p class="mb-1 text-muted">Average Impact</p>
-                            <h4 class="text-warning" id="lightingImpact">-- kWh</h4>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-lg-4">
-                    <div class="glass-card p-4">
-                        <h5 class="card-title mb-4">
-                            <i class="fas fa-users text-success me-2"></i>
-                            Occupancy Impact
-                        </h5>
-                        <canvas id="occupancyChart"></canvas>
-                        <div class="mt-3 text-center">
-                            <p class="mb-1 text-muted">Correlation</p>
-                            <h4 class="text-success">High</h4>
+                    <div class="col-md-6">
+                        <div class="time-insight">
+                            <div class="time-icon">📅</div>
+                            <div>
+                                <h5>Busiest Day</h5>
+                                <p class="mb-0" id="peakDay">Loading...</p>
+                                <small class="text-muted">Day with most energy use</small>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
+    </div>
+
+    <!-- What's Using Your Energy -->
+    <div class="row g-4">
+        <div class="col-12">
+            <div class="insight-card">
+                <h4 class="mb-4"><i class="fas fa-plug text-primary me-2"></i> What's Using Your Energy?</h4>
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <div class="device-insight">
+                            <div class="device-bar">
+                                <div class="device-bar-fill bg-primary" id="hvacBar" style="width: 0%"></div>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center mt-2">
+                                <span><i class="fas fa-wind me-2"></i> Air Conditioning</span>
+                                <strong id="hvacPercent">--</strong>
+                            </div>
+                            <small class="text-muted">When AC is on</small>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="device-insight">
+                            <div class="device-bar">
+                                <div class="device-bar-fill bg-warning" id="lightBar" style="width: 0%"></div>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center mt-2">
+                                <span><i class="fas fa-lightbulb me-2"></i> Lighting</span>
+                                <strong id="lightPercent">--</strong>
+                            </div>
+                            <small class="text-muted">When lights are on</small>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="device-insight">
+                            <div class="device-bar">
+                                <div class="device-bar-fill bg-success" id="otherBar" style="width: 0%"></div>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center mt-2">
+                                <span><i class="fas fa-home me-2"></i> Other Devices</span>
+                                <strong id="otherPercent">--</strong>
+                            </div>
+                            <small class="text-muted">Everything else</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
     </section>
 
-    <!-- Smart Suggestions Section -->
-    <section id="suggestions" class="section-padding bg-gradient-section">
+    <!-- Tips Section - Simplified -->
+    <section id="tips" class="section-padding">
         <div class="container">
-            <div class="section-header text-center mb-5">
-                <h2 class="display-5 fw-bold mb-3 text-white">
-                    <i class="fas fa-lightbulb text-warning me-3"></i>
-                    Smart Energy Tips
-                </h2>
-                <p class="lead text-white-50">AI-powered suggestions to optimize your energy usage</p>
+            <div class="text-center mb-5">
+                <h2 class="display-6 fw-bold mb-3">Energy Saving Tips</h2>
+                <p class="text-muted">Simple ways to reduce your energy bill</p>
             </div>
 
             <div id="suggestionsContainer" class="row g-4">
-                <!-- Suggestions will be loaded dynamically -->
+                <!-- Default tips -->
+                <div class="col-md-4">
+                    <div class="suggestion-card">
+                        <div class="suggestion-icon">💡</div>
+                        <h5 class="suggestion-title">Use LED Bulbs</h5>
+                        <p class="suggestion-message">Replace old bulbs with energy-efficient LEDs to save up to 75% on
+                            lighting costs.</p>
+                        <span class="suggestion-savings">Save 5-10%</span>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="suggestion-card">
+                        <div class="suggestion-icon">❄️</div>
+                        <h5 class="suggestion-title">Optimize AC</h5>
+                        <p class="suggestion-message">Set your thermostat to 24-26°C for optimal comfort and efficiency.
+                        </p>
+                        <span class="suggestion-savings">Save 10-15%</span>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="suggestion-card">
+                        <div class="suggestion-icon">☀️</div>
+                        <h5 class="suggestion-title">Go Solar</h5>
+                        <p class="suggestion-message">Consider installing solar panels to reduce your electricity bills
+                            significantly.</p>
+                        <span class="suggestion-savings">Save 20-30%</span>
+                    </div>
+                </div>
             </div>
         </div>
     </section>
 
-    <!-- Footer -->
+    <!-- Simple Footer -->
     <footer class="footer">
         <div class="container">
-            <div class="row">
-                <div class="col-md-6 text-center text-md-start">
-                    <p class="mb-0">
-                        <i class="fas fa-bolt text-warning me-2"></i>
-                        Smart Energy Consumption Analysis © 2026
-                    </p>
-                </div>
-                <div class="col-md-6 text-center text-md-end">
-                    <p class="mb-0">
-                        Powered by LSTM Neural Networks & Flask
-                    </p>
-                </div>
+            <div class="text-center">
+                <p class="mb-0">
+                    <i class="fas fa-bolt text-warning me-2"></i>
+                    Smart Energy © 2026 | Powered by AI
+                </p>
             </div>
         </div>
     </footer>
@@ -422,8 +373,9 @@
 
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-    
+
     <!-- Custom JS -->
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 </body>
+
 </html>
