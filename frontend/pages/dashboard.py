@@ -3,7 +3,8 @@ import pandas as pd
 import plotly.graph_objects as go
 import os
 import sys
-from google import genai
+import google.generativeai as genai
+
 
 # ---------- Unified Backend Path ----------
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -13,7 +14,8 @@ sys.path.append(PROJECT_ROOT)
 
 from backend.config import GEMINI_API_KEY
 
-client = genai.Client(api_key=GEMINI_API_KEY)
+genai.configure(api_key=GEMINI_API_KEY)
+model = genai.GenerativeModel("gemini-1.5-flash")
 
 @st.cache_data(show_spinner=False)
 def get_ai_insights(data_context):
@@ -28,11 +30,9 @@ def get_ai_insights(data_context):
         Data:
         {data_context}
         """
-        response = client.models.generate_content(
-            model="models/gemini-2.5-flash",
-            contents=prompt
-        )
+        response = model.generate_content(prompt)
         return response.text
+        
     except:
         return "⚠️ AI quota limit reached. Please try again later."
 
@@ -169,3 +169,4 @@ def app():
         with st.spinner("Analyzing energy data..."):
             insights = get_ai_insights(monthly_summary)
             st.markdown(insights)
+
