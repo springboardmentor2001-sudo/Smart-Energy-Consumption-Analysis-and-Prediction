@@ -10,9 +10,13 @@ sys.path.append(PROJECT_ROOT)
 
 st.set_page_config(page_title="Smart Energy AI", layout="wide")
 
+import os
+
 def load_css():
-    with open("style.css") as f:
+    css_path = os.path.join(os.path.dirname(__file__), "style.css")
+    with open(css_path) as f:
         st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
+
 
 load_css()
 
@@ -126,3 +130,4 @@ elif selected == "Reports":
 elif selected == "Logout":
     st.session_state.logged_in = False
     st.rerun()
+
