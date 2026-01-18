@@ -97,7 +97,8 @@ if selected == "Home":
         """, unsafe_allow_html=True)
 
     with col2:
-        st.image("assets/energy.png", width=420)
+       img_path = os.path.join(os.path.dirname(__file__), "assets", "energy.png")
+       st.image(img_path, width=420)
 
     st.subheader("🚀 Key Features")
 
@@ -130,4 +131,5 @@ elif selected == "Reports":
 elif selected == "Logout":
     st.session_state.logged_in = False
     st.rerun()
+
 
