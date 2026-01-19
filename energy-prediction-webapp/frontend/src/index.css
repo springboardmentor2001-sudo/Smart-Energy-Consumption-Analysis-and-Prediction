@@ -1,0 +1,155 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  @apply transition-colors duration-200;
+}
+
+/* Dark Mode (Default) */
+html, body {
+  @apply bg-slate-900 text-slate-100;
+  background-color: #0f172a !important;
+  color: #f1f5f9 !important;
+}
+
+/* Light Mode */
+html.light,
+html.light body {
+  @apply bg-white text-slate-900 !important;
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+}
+
+html.light {
+  color-scheme: light;
+}
+
+html.dark {
+  color-scheme: dark;
+}
+
+/* Light mode card styles */
+html.light .card {
+  @apply bg-slate-50 border border-slate-200;
+}
+
+html.light .card:hover {
+  @apply border-slate-300;
+}
+
+/* Light mode input styles */
+html.light .input-field {
+  @apply bg-white border border-slate-300 text-slate-900 placeholder-slate-500;
+}
+
+html.light .input-field:focus {
+  @apply border-blue-500;
+}
+
+/* Light mode navbar */
+html.light nav {
+  @apply bg-white border-slate-200;
+}
+
+html.light nav a {
+  @apply text-slate-900 hover:text-blue-600;
+}
+
+/* Light mode buttons */
+html.light .btn-secondary {
+  @apply bg-slate-200 text-slate-900 hover:bg-slate-300;
+}
+
+/* Light mode form elements */
+html.light textarea,
+html.light select,
+html.light input[type="text"],
+html.light input[type="email"],
+html.light input[type="password"],
+html.light input[type="number"] {
+  @apply bg-white text-slate-900 border-slate-300;
+}
+
+html.light textarea:focus,
+html.light select:focus,
+html.light input:focus {
+  @apply border-blue-500 ring-blue-500;
+}
+
+/* Light mode labels and text */
+html.light label {
+  @apply text-slate-700;
+}
+
+html.light h1, html.light h2, html.light h3, html.light h4, html.light h5, html.light h6 {
+  @apply text-slate-900;
+}
+
+.container {
+  @apply mx-auto px-4 sm:px-6 lg:px-8;
+}
+
+.btn {
+  @apply px-4 py-2 rounded-lg font-semibold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2;
+}
+
+.btn-primary {
+  @apply bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500;
+}
+
+html.light .btn-primary {
+  @apply focus:ring-offset-white;
+}
+
+.btn-secondary {
+  @apply bg-slate-700 text-white hover:bg-slate-800 focus:ring-slate-600;
+}
+
+html.light .btn-secondary {
+  @apply focus:ring-offset-white;
+}
+
+.btn-danger {
+  @apply bg-red-600 text-white hover:bg-red-700 focus:ring-red-500;
+}
+
+html.light .btn-danger {
+  @apply focus:ring-offset-white;
+}
+
+.card {
+  @apply bg-slate-800 rounded-xl p-6 shadow-lg border border-slate-700 hover:border-slate-600 transition-all;
+}
+
+.input-field {
+  @apply w-full px-4 py-2 rounded-lg bg-slate-700 border border-slate-600 text-white placeholder-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-0;
+}
+
+.fade-in {
+  animation: fadeIn 0.5s ease-in;
+}
+
+.slide-in {
+  animation: slideIn 0.5s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateY(10px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
