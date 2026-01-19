@@ -1,0 +1,484 @@
+# SMART ENERGY AI PLATFORM - PROMPT DOCUMENTATION
+# All AI prompts used in the project
+# Date: January 2026
+# Student: Sahithi (y22cs085)
+
+================================================================================
+1. FILE UPLOAD - DATA EXTRACTION PROMPT (Groq/Gemini)
+================================================================================
+
+Extract energy prediction parameters from this text and return ONLY valid JSON.
+
+Required fields (extract from text, use defaults if not found):
+- DateTime: date and time in "YYYY-MM-DDTHH:MM" format (if date like "11-01-2026 10:30" found, convert to "2026-01-11T10:30")
+- Temperature: number (remove any units like °C)
+- Humidity: number 0-100 (remove any % symbols)
+- SquareFootage: number (square footage or area)
+- Occupancy: number 1-10 (number of people)
+- RenewableEnergy: number (renewable energy in kWh)
+- HVACUsage: must be exactly "On" or "Off" (convert "on" to "On", "off" to "Off")
+- LightingUsage: must be exactly "On" or "Off" (also check for "Lightning Usage" typo - treat as Lighting)
+- Holiday: must be exactly "Yes" or "No" (convert "yes" to "Yes", "no" to "No")
+
+IMPORTANT RULES:
+1. Convert all text values to proper case: "on" → "On", "yes" → "Yes"
+2. Handle typos: "Lightning" → "Lighting"
+3. Convert date formats: "11-01-2026 10:30" → "2026-01-11T10:30"
+4. Remove units: "29.2°C" → 29.2, "48.3%" → 48.3
+5. If any field is missing, use these defaults:
+   - Temperature: 22, Humidity: 50, SquareFootage: 1500, Occupancy: 3
+   - RenewableEnergy: 5, HVACUsage: "Off", LightingUsage: "Off", Holiday: "No"
+
+Return ONLY the JSON object. No markdown, no explanations, no extra text.
+
+TEXT:
+{text_content[:2000]}
+
+JSON:
+
+================================================================================
+2. AI CHATBOT - SYSTEM CONTEXT PROMPT (Groq/Gemini)
+================================================================================
+
+You are the Smart Energy AI Assistant for a web platform that predicts energy consumption.
+
+YOUR ROLE AND CAPABILITIES:
+
+1. WEBSITE GUIDANCE - Explain how to use the platform:
+   - Prediction tab: Manual entry or file upload for predictions
+   - AI Chat: Conversational predictions (where we are now)
+   - Dashboard: Visual analytics and charts
+   - Reviews: User feedback section
+   - About: Information about the technology
+
+2. WEBSITE PURPOSE - Explain what this does:
+   - Uses Machine Learning to predict energy consumption
+   - Analyzes: Temperature, Humidity, Occupancy, HVAC/Lighting usage, Square footage, Renewable energy, Holiday status
+   - Provides: Predictions in kWh, Usage level, Efficiency score, Personalized recommendations
+   - Visualizes: Energy patterns, device breakdown, trends
+
+3. ENERGY PREDICTIONS - Guide users through predictions:
+   - When users want predictions, ask step-by-step for the 8 parameters
+   - Be encouraging and helpful throughout the process
+
+4. HANDLE GRATITUDE & FOLLOW-UP - After predictions:
+   - When users say "thank you", "thanks", respond warmly and offer additional help
+   - Keep the conversation going by offering next steps
+
+5. HANDLE IRRELEVANT QUERIES - Stay on topic:
+   - If asked about unrelated topics, politely redirect to energy topics
+   - Be professional but friendly
+
+RESPONSE STYLE:
+- Keep responses to 2-3 sentences unless explaining features
+- Be conversational and helpful
+- Focus on energy, sustainability, and this platform
+
+User message: {message}
+
+Provide a helpful, concise response.
+
+================================================================================
+3. CHATBOT - FALLBACK RESPONSE PROMPTS (Rule-based)
+================================================================================
+
+3.1 GREETING RESPONSE:
+----------------------
+Hello! 👋 I'm your Smart Energy AI Assistant. I can help you:
+• Predict energy consumption
+• Guide you through the platform
+• Answer energy-related questions
+
+What would you like to do today?
+
+
+3.2 PLATFORM PURPOSE RESPONSE:
+-------------------------------
+This is a **Smart Energy AI Platform** that helps you manage energy consumption! 
+
+🎯 **What it does:**
+• Predicts your energy usage based on 8 parameters
+• Uses Machine Learning (Random Forest model)
+• Analyzes temperature, humidity, occupancy, and more
+• Provides personalized energy-saving recommendations
+
+💡 **You get:**
+• Accurate predictions in kWh
+• Usage level (Low/Normal/High)
+• Efficiency score (0-100%)
+• Interactive charts and analytics
+
+Want to try a prediction?
+
+
+3.3 HOW TO USE PLATFORM RESPONSE:
+----------------------------------
+📖 **How to Use This Platform:**
+
+**Option 1 - Prediction Tab:**
+1. Click "Prediction" in the menu
+2. Choose "Manual Entry" or "Upload File"
+3. Enter 8 parameters (temp, humidity, etc.)
+4. Get instant predictions!
+
+**Option 2 - AI Chat (here!):**
+1. Tell me you want a prediction
+2. I'll ask for each parameter step-by-step
+3. You answer, I'll calculate!
+
+**Option 3 - Dashboard:**
+• View analytics and charts
+• See energy trends
+
+Which would you like to try?
+
+
+3.4 ENERGY PREDICTION REQUEST RESPONSE:
+----------------------------------------
+⚡ **Let's predict your energy consumption!**
+
+I'll need these 8 parameters:
+
+1. 🌡️ **Temperature** (°C)
+2. 💧 **Humidity** (%)
+3. 🏠 **Square Footage** (sq ft)
+4. 👥 **Occupancy** (number of people)
+5. 🌱 **Renewable Energy** (kWh)
+6. ❄️ **HVAC Usage** (On/Off)
+7. 💡 **Lighting Usage** (On/Off)
+8. 🎉 **Holiday** (Yes/No)
+
+Go ahead and provide these values, or say "manual entry" to use the form!
+
+
+3.5 THANK YOU RESPONSE:
+-----------------------
+You're very welcome! 😊 
+
+I'm here to help you optimize your energy usage anytime!
+
+**What's next?**
+• Try another prediction?
+• Explore the Dashboard charts?
+• Learn energy-saving tips?
+
+Just let me know!
+
+
+3.6 ENERGY TIPS RESPONSE:
+-------------------------
+💡 **Energy-Saving Tips:**
+
+**🌡️ Temperature Control:**
+• Keep thermostat at 22-24°C
+• Use programmable thermostats
+• Close windows when HVAC is on
+
+**💡 Lighting:**
+• Switch to LED bulbs
+• Use natural light
+• Turn off lights when leaving rooms
+
+**❄️ HVAC:**
+• Regular maintenance
+• Clean filters monthly
+• Use ceiling fans
+
+**🌱 Renewable Energy:**
+• Install solar panels
+• Consider battery storage
+
+Want a personalized prediction to see your specific savings potential?
+
+
+3.7 FEATURES/CAPABILITIES RESPONSE:
+------------------------------------
+🤖 **What I Can Do:**
+
+**1. Energy Predictions** ⚡
+   • Calculate consumption based on your data
+   • Give efficiency scores
+   • Provide recommendations
+
+**2. Platform Guidance** 📖
+   • Show you how to use features
+   • Explain the technology
+   • Help navigate the interface
+
+**3. Energy Insights** 💡
+   • Share energy-saving tips
+   • Explain patterns
+   • Answer questions
+
+**4. File Processing** 📁
+   • Upload documents with your data
+   • Auto-extract parameters
+   • Instant predictions
+
+What would you like to explore?
+
+
+3.8 GOODBYE RESPONSE:
+---------------------
+Goodbye! ⚡ Thanks for using Smart Energy AI Platform.
+
+Remember to check your Dashboard for energy trends!
+
+Come back anytime for predictions or energy insights. 
+
+Have a great day! 👋
+
+
+3.9 OFF-TOPIC/IRRELEVANT QUERY RESPONSE:
+-----------------------------------------
+I appreciate your question, but I specialize in **energy consumption predictions** and this platform's features! 
+
+I can help you with:
+• Energy predictions
+• Platform guidance
+• Energy-saving tips
+• Understanding your consumption patterns
+
+Do you have any energy-related questions I can help with?
+
+
+3.10 DEFAULT/FALLBACK RESPONSE:
+--------------------------------
+I'm your Smart Energy AI Assistant! 🤖
+
+I specialize in:
+• ⚡ **Energy Predictions** - Calculate your consumption
+• 📖 **Platform Help** - Guide you through features  
+• 💡 **Energy Tips** - Optimize your usage
+
+**Popular commands:**
+• "Predict my energy"
+• "How to use this platform"
+• "Give me energy tips"
+• "What is this website"
+
+What would you like to know?
+
+================================================================================
+4. CONVERSATIONAL PREDICTION - STEP-BY-STEP QUESTIONS
+================================================================================
+
+Step 1 - Temperature:
+---------------------
+Great! Let's start. What is the current temperature in Celsius? (e.g., 25)
+
+Step 2 - Humidity:
+------------------
+Perfect! Now, what is the humidity percentage? (e.g., 50)
+
+Step 3 - Square Footage:
+-------------------------
+Thanks! What is the square footage? (e.g., 1500)
+
+Step 4 - Occupancy:
+-------------------
+Got it! How many people are present? (1-10)
+
+Step 5 - Renewable Energy:
+---------------------------
+Excellent! Renewable energy in kWh? (e.g., 10)
+
+Step 6 - HVAC Usage:
+--------------------
+Almost done! Is HVAC On or Off?
+
+Step 7 - Lighting Usage:
+-------------------------
+Great! Is lighting On or Off?
+
+Step 8 - Holiday:
+-----------------
+Last question! Is today a holiday? (Yes/No)
+
+Calculating Prediction:
+-----------------------
+Calculating your energy prediction...
+
+Prediction Result:
+------------------
+⚡ Your Energy Prediction:
+
+{prediction} kWh
+
+📊 Usage Level: {usage_level}
+⚙️ Efficiency Score: {efficiency_score}%
+⏰ Peak Hour: {peak_hour}
+
+💡 Recommendations:
+• {recommendation_1}
+• {recommendation_2}
+• {recommendation_3}
+
+Want another prediction? Just ask!
+
+================================================================================
+5. VOICE INTERACTION PROMPTS
+================================================================================
+
+5.1 Speech Recognition Start:
+------------------------------
+Listening...
+
+5.2 Auto-Speak Enabled:
+-----------------------
+Auto-speak enabled
+
+5.3 Auto-Speak Disabled:
+------------------------
+Auto-speak disabled
+
+5.4 Voice Error:
+----------------
+Sorry, I couldn't hear that clearly. Please try again.
+
+================================================================================
+6. SYSTEM MESSAGES & NOTIFICATIONS
+================================================================================
+
+6.1 File Upload Success:
+-------------------------
+✅ Parameters extracted successfully (AI-powered)
+Data extracted and form auto-filled!
+
+6.2 File Upload Fallback:
+--------------------------
+✅ Parameters extracted successfully (Pattern matching)
+Data extracted using intelligent pattern recognition!
+
+6.3 File Upload Error:
+-----------------------
+❌ Could not extract all parameters from file.
+Please check the file format and try again.
+
+6.4 AI Services Unavailable:
+-----------------------------
+⚠️ AI services temporarily unavailable. Using intelligent fallback system.
+All features remain fully functional!
+
+6.5 Prediction Loading:
+------------------------
+🤖 Processing your request...
+Analyzing your energy parameters...
+
+6.6 Prediction Success:
+-----------------------
+✅ Prediction Complete!
+Energy consumption forecast generated.
+
+6.7 Review Submitted:
+---------------------
+✅ Thank you for your review!
+Your feedback helps us improve.
+
+================================================================================
+7. ERROR MESSAGES & VALIDATION PROMPTS
+================================================================================
+
+7.1 Invalid Number Input:
+--------------------------
+Please enter a valid number. {question}
+
+7.2 Invalid Option Input:
+--------------------------
+Please answer: {option1} or {option2}. {question}
+
+7.3 Missing File:
+-----------------
+⚠️ Please select a file first
+
+7.4 Invalid File Type:
+----------------------
+❌ Unsupported file type: {extension}
+Supported formats: PDF, TXT, DOC, DOCX, CSV
+
+7.5 No File Selected:
+---------------------
+❌ No file selected. Please choose a file to upload.
+
+7.6 Server Error:
+-----------------
+❌ Server error occurred. Please try again later.
+
+7.7 Validation Error:
+---------------------
+Please fill in all required fields before submitting.
+
+================================================================================
+8. UI MESSAGES & INSTRUCTIONS
+================================================================================
+
+8.1 Welcome Message:
+--------------------
+Welcome, {username}!
+
+8.2 Chatbot Initial Message:
+-----------------------------
+Hello! I'm your Smart Energy AI Assistant. I can help you predict energy consumption. Would you like to start? Just say "yes" or "calculate energy"!
+
+8.3 Results Placeholder:
+------------------------
+Your prediction results will appear here
+
+8.4 Upload Instructions:
+------------------------
+Supported formats: PDF, TXT, DOC, DOCX, CSV (Max 16MB)
+
+8.5 Form Instructions:
+----------------------
+Enter your parameters to get accurate predictions and personalized recommendations
+
+8.6 Dashboard Loading:
+----------------------
+Loading analytics dashboard...
+
+8.7 Reviews Section:
+--------------------
+Share your experience with our platform
+
+================================================================================
+9. RECOMMENDATION GENERATION LOGIC
+================================================================================
+
+If Temperature > 25 AND HVAC On:
+---------------------------------
+Consider raising thermostat by 2°C to save energy
+
+If Occupancy > 6 AND Lighting On:
+----------------------------------
+Use natural lighting when possible with high occupancy
+
+If Prediction > 85:
+-------------------
+Peak usage detected - consider load balancing
+
+If Renewable Energy < 5:
+------------------------
+Increase renewable energy usage to reduce costs
+
+If Temperature < 18:
+--------------------
+Temperature is low - heating costs may be high
+
+If HVAC On AND Occupancy < 3:
+------------------------------
+HVAC is on with low occupancy - consider turning off
+
+If Efficiency Score < 70:
+--------------------------
+Energy usage is above average, review device patterns
+
+================================================================================
+END OF PROMPT DOCUMENTATION
+================================================================================
+
+Last Updated: January 19, 2026
+Version: 1.0
+
+Project: Smart Energy AI Platform
+Student: Sahithi (y22cs085)
+GitHub: https://github.com/Sahithi-9615/smart-energy-ai
