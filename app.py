@@ -22,10 +22,7 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 # OpenWeatherMap API Key (Get free key from https://openweathermap.org/api)
 WEATHER_API_KEY = os.getenv("OPENWEATHER_API_KEY")  # Replace with your API key
 
-db = SQLAlchemy(app)
-
-with app.app_context():
-    db.create_all()
+db = SQLAlchemy(app)    
 
 UPLOAD_FOLDER = 'uploads'
 ALLOWED_EXTENSIONS = {'csv', 'pdf'}
@@ -715,7 +712,12 @@ def upload_prediction_file():
     except Exception as e:
         return jsonify({'error': f'Processing error: {str(e)}'}), 500
 
+@app.before_first_request
+def create_tables():
+    db.create_all()
+
 if __name__ == '__main__':
     app.run(debug=True)    
+
 
 
