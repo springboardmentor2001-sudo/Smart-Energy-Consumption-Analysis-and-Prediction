@@ -24,6 +24,9 @@ WEATHER_API_KEY = os.getenv("OPENWEATHER_API_KEY")  # Replace with your API key
 
 db = SQLAlchemy(app)
 
+with app.app_context():
+    db.create_all()
+
 UPLOAD_FOLDER = 'uploads'
 ALLOWED_EXTENSIONS = {'csv', 'pdf'}
 
@@ -713,4 +716,5 @@ def upload_prediction_file():
         return jsonify({'error': f'Processing error: {str(e)}'}), 500
 
 if __name__ == '__main__':
-    db.create_all()     
+    app.run()    
+
