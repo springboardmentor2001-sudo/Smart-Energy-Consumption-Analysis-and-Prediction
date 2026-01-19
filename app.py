@@ -15,7 +15,7 @@ import requests
 load_dotenv()
 
 app = Flask(__name__)
-app.secret_key = os.getenv("FLASK_SECRET_KEY")
+app.secret_key = os.getenv("FLASK_SECRET_KEY", "dev-secret-key")
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///energy_predictor.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
@@ -713,6 +713,4 @@ def upload_prediction_file():
         return jsonify({'error': f'Processing error: {str(e)}'}), 500
 
 if __name__ == '__main__':
-    with app.app_context():
-        db.create_all()
-    app.run(debug=True)
+    db.create_all()     
