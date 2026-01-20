@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Energy Assistant | EnergyPredict</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Google Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+            color: #fff;
+            min-height: 100vh;
+        }
+
+        header {
+            padding: 20px 50px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        header h1 {
+            font-size: 1.6rem;
+            font-weight: 600;
+        }
+
+        nav a {
+            color: #fff;
+            text-decoration: none;
+            margin-left: 22px;
+            transition: 0.3s;
+        }
+
+        nav a:hover {
+            color: #00e6e6;
+        }
+
+        /* Chat Layout */
+        .chat-wrapper {
+            max-width: 800px;
+            margin: 40px auto;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+        }
+
+        .chat-title {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .chat-title h2 {
+            font-size: 2rem;
+            margin-bottom: 8px;
+        }
+
+        .chat-title p {
+            opacity: 0.85;
+            font-size: 0.95rem;
+        }
+
+        .messages {
+            margin: 25px 0;
+        }
+
+        .message {
+            max-width: 75%;
+            padding: 14px 18px;
+            border-radius: 14px;
+            margin-bottom: 15px;
+            line-height: 1.5;
+            font-size: 0.95rem;
+        }
+
+        .user-message {
+            background: #00e6e6;
+            color: #000;
+            margin-left: auto;
+            border-bottom-right-radius: 4px;
+        }
+
+        .bot-message {
+            background: rgba(255, 255, 255, 0.15);
+            color: #fff;
+            margin-right: auto;
+            border-bottom-left-radius: 4px;
+        }
+
+        .chat-form {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        textarea {
+            flex: 1;
+            resize: none;
+            padding: 14px;
+            border-radius: 10px;
+            border: none;
+            font-size: 0.95rem;
+            outline: none;
+        }
+
+        button {
+            padding: 14px 22px;
+            border-radius: 10px;
+            border: none;
+            background: #00e6e6;
+            color: #000;
+            font-weight: 500;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        button:hover {
+            background: #00bfbf;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 40px;
+            opacity: 0.7;
+            font-size: 0.85rem;
+        }
+
+        @media (max-width: 768px) {
+            header {
+                flex-direction: column;
+                gap: 12px;
+            }
+
+            .chat-wrapper {
+                margin: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>⚡ EnergyPredict</h1>
+    <nav>
+      <a href="/">Home</a>
+        <a href="/about">About</a>
+        <a href="/predict">Predict</a>
+        <a href="/history">History</a>
+        <a href="/analytics">Analytics</a>
+        <a href="/chatbot">Chatbot</a>
+        <a href="/review">Review</a>>
+    </nav>
+</header>
+
+<div class="chat-wrapper">
+    <div class="chat-title">
+        <h2>Energy Consumption Assistant</h2>
+        <p>Ask about energy usage, predictions, or efficiency tips</p>
+    </div>
+
+    <div class="messages">
+        <% if (userMessage) { %>
+            <div class="message user-message">
+                <strong>You</strong><br>
+                <%= userMessage %>
+            </div>
+        <% } %>
+
+        <% if (reply) { %>
+            <div class="message bot-message">
+                <strong>Assistant</strong><br>
+                <%= reply %>
+            </div>
+        <% } %>
+    </div>
+
+    <form class="chat-form" action="/chatbot" method="POST">
+        <textarea
+            name="message"
+            rows="2"
+            placeholder="Ask something about energy..."
+            required></textarea>
+        <button type="submit">Send</button>
+    </form>
+</div>
+
+<footer>
+    © <%= new Date().getFullYear() %> EnergyPredict | AI-Powered Energy Insights
+</footer>
+
+</body>
+</html>

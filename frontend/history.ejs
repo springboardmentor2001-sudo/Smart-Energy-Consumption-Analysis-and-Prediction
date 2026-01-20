@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Prediction History | EnergyPredict</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+            color: #fff;
+            min-height: 100vh;
+        }
+
+        header {
+            padding: 20px 50px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        header h1 {
+            font-size: 1.6rem;
+            font-weight: 600;
+        }
+
+        nav a {
+            color: #fff;
+            text-decoration: none;
+            margin-left: 22px;
+            transition: 0.3s;
+        }
+
+        nav a:hover {
+            color: #00e6e6;
+        }
+
+        .history-wrapper {
+            max-width: 1100px;
+            margin: 40px auto;
+            padding: 30px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 18px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+        }
+
+        .history-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .history-header h2 {
+            font-size: 2.2rem;
+            margin-bottom: 10px;
+        }
+
+        .history-header p {
+            opacity: 0.85;
+            font-size: 0.95rem;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th, td {
+            padding: 14px;
+            text-align: center;
+            font-size: 0.9rem;
+        }
+
+        th {
+            background: rgba(0, 230, 230, 0.2);
+        }
+
+        tr {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        tr:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .prediction {
+            font-weight: 600;
+            color: #00e6e6;
+        }
+
+        .no-data {
+            text-align: center;
+            margin-top: 40px;
+            opacity: 0.85;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 40px;
+            opacity: 0.7;
+            font-size: 0.85rem;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>⚡ EnergyPredict</h1>
+    <nav>
+       <a href="/">Home</a>
+        <a href="/about">About</a>
+        <a href="/predict">Predict</a>
+        <a href="/history">History</a>
+        <a href="/analytics">Analytics</a>
+        <a href="/chatbot">Chatbot</a>
+        <a href="/review">Review</a>
+    </nav>
+</header>
+
+<%
+    const safePredictions = Array.isArray(predictions) ? predictions : [];
+%>
+
+<div class="history-wrapper">
+    <div class="history-header">
+        <h2>Prediction History</h2>
+        <p>Your past energy consumption predictions</p>
+    </div>
+
+    <% if (safePredictions.length === 0) { %>
+        <div class="no-data">
+            <p>No predictions available yet.</p>
+            <p>Make a prediction to see history here.</p>
+        </div>
+    <% } else { %>
+        <table>
+            <thead>
+                <tr>
+                    <th>Timestamp</th>
+                    <th>Temp (°C)</th>
+                    <th>Humidity (%)</th>
+                    <th>Area (sq ft)</th>
+                    <th>Occupancy</th>
+                    <th>Renewable (%)</th>
+                    <th>Hour</th>
+                    <th>Day</th>
+                    <th>Month</th>
+                    <th>Energy (kWh)</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% safePredictions.forEach(p => { %>
+                    <tr>
+                        <td><%= p.timestamp %></td>
+                        <td><%= p.Temperature %></td>
+                        <td><%= p.Humidity %></td>
+                        <td><%= p.SquareFootage %></td>
+                        <td><%= p.Occupancy %></td>
+                        <td><%= p.RenewableEnergy %></td>
+                        <td><%= p.Hour %></td>
+                        <td><%= p.Day %></td>
+                        <td><%= p.Month %></td>
+                        <td class="prediction"><%= p.prediction %></td>
+                    </tr>
+                <% }) %>
+            </tbody>
+        </table>
+    <% } %>
+</div>
+
+<footer>
+    © <%= new Date().getFullYear() %> EnergyPredict | Smart Energy Monitoring
+</footer>
+
+</body>
+</html>
