@@ -1,0 +1,72 @@
+# ⚡ Energy Wastage Detection System
+
+This project is a machine learning–based web application that predicts energy consumption and identifies potential energy wastage in buildings.  
+It helps in understanding energy usage patterns and supports better energy management decisions.
+
+---
+
+## 📌 Problem Statement
+
+Energy wastage in buildings often goes unnoticed due to lack of real-time analysis and prediction.  
+Without intelligent systems, it becomes difficult to identify inefficient energy usage.
+
+This project aims to solve that problem using **feature engineering** and **machine learning models**.
+
+---
+
+## 🚀 Solution Overview
+
+- Perform feature engineering on raw energy data
+- Train a machine learning model to predict energy consumption
+- Deploy the trained model using a Flask web application
+- Allow users to input parameters and get real-time predictions
+
+---
+
+## 🧠 Machine Learning Approach
+
+- Feature engineering for time-based and energy-related patterns
+- Train-test data splitting
+- Model training using LightGBM
+- Model evaluation using R², MAE, and RMSE
+- Model saved and loaded using Pickle
+
+---
+
+## 🛠 Tech Stack
+
+- **Programming Language:** Python  
+- **Backend:** Flask  
+- **Machine Learning:** LightGBM, Scikit-learn  
+- **Data Handling:** Pandas, NumPy  
+- **Frontend:** HTML, CSS  
+- **Model Storage:** Pickle  
+
+---
+
+## 📂 Project Structure
+
+energy-wastage-detection/
+│
+├── backend/
+│ ├── app.py
+│ ├── model/
+│ │ └── lgbm_energy_model.pkl
+│
+├── frontend/
+│   ├── templates/
+│   │   ├── index.html
+│   │   ├── about.html
+│   │   ├── login.html
+│   │   ├── register.html
+│   │   ├── dashboard.html
+│   │   └── result.html
+├── static/
+│   ├── css/
+│   │   └── style.css
+│   │
+│   └── js/
+│       └── chatbot.js
+│____
+├── .gitignore
+└── README.md
