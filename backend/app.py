@@ -17,7 +17,7 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 CORS(app)
 
-client = genai.Client(api_key="AIzaSyBeFl4fQFnbBSiDGA7GJadmdB2PmpWe25k")
+client = genai.Client(api_key="keep our api key")
 db = SQLAlchemy(app)
 login_manager = LoginManager()
 login_manager.init_app(app)
@@ -359,3 +359,4 @@ def chat():
 
 if __name__ == "__main__":
     app.run(debug=True, port=5000)
+
