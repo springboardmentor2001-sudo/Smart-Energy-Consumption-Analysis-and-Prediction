@@ -1,0 +1,334 @@
+{% extends "base.html" %}
+{% block title %}Prediction{% endblock %}
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+
+{% block content %}
+<div class="prediction-page">
+  <div class="prediction-grid">
+    <!-- LEFT PANEL: INPUT FORMS -->
+    <div class="input-panel">
+      <div class="panel-header">
+        <h2 class="panel-title">⚡ Energy</h2>
+        <p class="panel-subtitle">Instant predictions</p>
+      </div>
+
+      <!-- TAB BUTTONS -->
+      <div class="tab-buttons">
+        <button class="tab-btn active" data-tab="upload">📤 File</button>
+        <button class="tab-btn" data-tab="manual">⌨️ Manual</button>
+      </div>
+
+      <!-- TAB 1: FILE UPLOAD -->
+      <div id="upload-tab" class="tab-content active">
+        <!-- REQUIRED FIELDS INFO -->
+        <div style="background: linear-gradient(135deg, rgba(79, 209, 197, 0.15), rgba(148, 51, 234, 0.1)); border: 1px solid rgba(79, 209, 197, 0.3); border-radius: 0.6rem; padding: 0.9rem; margin-bottom: 1rem;">
+          <div style="display: flex; align-items: flex-start; gap: 0.6rem;">
+            <i class="fas fa-info-circle" style="color: #4fd1c7; margin-top: 0.2rem; font-size: 0.9rem;"></i>
+            <div style="font-size: 0.75rem; color: #cbd5e1;">
+              <div style="font-weight: 600; margin-bottom: 0.4rem; color: #e2e8f0;">📋 Required CSV Columns:</div>
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.3rem; line-height: 1.5;">
+                <span>• Temperature (°C)</span>
+                <span>• Humidity (%)</span>
+                <span>• SquareFootage</span>
+                <span>• Occupancy</span>
+                <span>• LightingUsage (On/Off)</span>
+                <span>• HVACUsage (On/Off)</span>
+                <span>• RenewableEnergy</span>
+                <span>• Hour (0-23)</span>
+                <span>• DayOfWeek (0-6)</span>
+                <span>• Holiday (Yes/No)</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="upload-section">
+          <div id="uploadZone" class="upload-area">
+            <i class="fas fa-cloud-upload-alt upload-icon"></i>
+            <h3 class="upload-text">Drag & Drop CSV</h3>
+            <p class="upload-subtext">or click to browse</p>
+            <input type="file" id="fileInput" accept=".csv" style="display: none;">
+          </div>
+
+          <div id="fileInfo" class="file-info" style="display: none;">
+            <div style="display: flex; align-items: center; gap: 0.8rem; flex: 1;">
+              <i class="fas fa-file-csv" style="font-size: 1.3rem; color: #4fd1c7;"></i>
+              <div>
+                <div style="font-weight: 600; color: #e2e8f0; font-size: 0.85rem;" id="fileName">file.csv</div>
+                <div style="font-size: 0.75rem; color: #94a3b8;">Ready</div>
+              </div>
+            </div>
+            <i class="fas fa-times remove-file" id="removeFile" style="cursor: pointer; color: #ef4444; font-size: 1rem;"></i>
+          </div>
+
+          <button id="uploadBtn" class="btn-primary upload-btn" disabled style="width: 100%; margin-top: 0.8rem; padding: 0.8rem;">
+            <i class="fas fa-zap"></i> Predict
+          </button>
+        </div>
+      </div>
+
+      <!-- TAB 2: MANUAL INPUT -->
+      <div id="manual-tab" class="tab-content">
+        <form method="POST" id="predictionForm">
+          <div class="form-grid-manual">
+            <label>
+              <span class="label-text">Temp (°C)</span>
+              <input type="number" name="Temperature" step="0.1" min="10" max="40" placeholder="22" required>
+            </label>
+            <label>
+              <span class="label-text">Humid (%)</span>
+              <input type="number" name="Humidity" step="0.1" min="0" max="100" placeholder="50" required>
+            </label>
+            <label>
+              <span class="label-text">SqFt</span>
+              <input type="number" name="SquareFootage" step="1" min="500" max="5000" placeholder="1200" required>
+            </label>
+            <label>
+              <span class="label-text">People</span>
+              <input type="number" name="Occupancy" step="1" min="0" max="50" placeholder="5" required>
+            </label>
+            <label>
+              <span class="label-text">Light</span>
+              <select name="LightingUsage" required>
+                <option value="">--</option>
+                <option value="On">On</option>
+                <option value="Off">Off</option>
+              </select>
+            </label>
+            <label>
+              <span class="label-text">HVAC</span>
+              <select name="HVACUsage" required>
+                <option value="">--</option>
+                <option value="On">On</option>
+                <option value="Off">Off</option>
+              </select>
+            </label>
+            <label>
+              <span class="label-text">Renewable</span>
+              <input type="number" name="RenewableEnergy" step="1" min="0" max="100" placeholder="15" required>
+            </label>
+            <label>
+              <span class="label-text">Hour</span>
+              <input type="number" name="Hour" step="1" min="0" max="23" placeholder="14" required>
+            </label>
+            <label>
+              <span class="label-text">Day</span>
+              <input type="number" name="DayOfWeek" step="1" min="0" max="6" placeholder="3" required>
+            </label>
+            <label>
+              <span class="label-text">Holiday</span>
+              <select name="Holiday" required>
+                <option value="">--</option>
+                <option value="Yes">Yes</option>
+                <option value="No">No</option>
+              </select>
+            </label>
+          </div>
+          <button type="submit" class="btn-primary manual-submit" style="width: 100%; margin-top: 1rem; padding: 0.8rem;">
+            <i class="fas fa-lightning-bolt"></i> Predict
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- RIGHT PANEL: RESULTS (ALWAYS VISIBLE) -->
+    <div class="results-panel">
+      <div id="empty-state" class="empty-state">
+        <div style="text-align: center; padding: 1.5rem;">
+          <i class="fas fa-chart-line" style="font-size: 2.5rem; color: #4fd1c7; margin-bottom: 0.8rem; opacity: 0.5;"></i>
+          <h3 style="color: #cbd5e1; margin-bottom: 0.3rem; font-size: 0.95rem;">No predictions</h3>
+          <p style="color: #94a3b8; font-size: 0.8rem;">Upload or fill the form</p>
+        </div>
+      </div>
+
+      <!-- UPLOAD RESULTS -->
+      <div id="upload-results" class="result-section" style="display: none;">
+        <h3 class="result-title">📊 Results</h3>
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-icon">📈</div>
+            <div class="stat-value" id="meanPred">-</div>
+            <div class="stat-label">Avg</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">⬆️</div>
+            <div class="stat-value" id="maxPred">-</div>
+            <div class="stat-label">Max</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">⬇️</div>
+            <div class="stat-value" id="minPred">-</div>
+            <div class="stat-label">Min</div>
+          </div>
+        </div>
+        <div class="table-wrapper">
+          <table class="results-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>kWh</th>
+              </tr>
+            </thead>
+            <tbody id="previewBody">
+            </tbody>
+          </table>
+        </div>
+        <a id="downloadBtn" class="btn-primary" style="display: flex; gap: 0.5rem; justify-content: center; text-decoration: none; margin-top: 0.8rem; padding: 0.7rem; font-size: 0.85rem;">
+          <i class="fas fa-download"></i> CSV
+        </a>
+      </div>
+
+      <!-- MANUAL RESULTS -->
+      <div id="manual-results" class="result-section" style="display: none;">
+        <h3 class="result-title">⚡ Result</h3>
+        <div class="prediction-card">
+          <div class="prediction-big">
+            <div class="prediction-value" id="singlePred">--</div>
+            <div style="color: #cbd5e1; font-size: 0.8rem;">kWh</div>
+          </div>
+          <div class="prediction-status" id="singleStatus">--</div>
+          <div id="singleTip" class="prediction-tip"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+      this.classList.add('active');
+      document.getElementById(this.dataset.tab + '-tab').classList.add('active');
+    });
+  });
+
+  const dropZone = document.getElementById('uploadZone');
+  const fileInput = document.getElementById('fileInput');
+  const fileInfo = document.getElementById('fileInfo');
+  const fileName = document.getElementById('fileName');
+  const removeFile = document.getElementById('removeFile');
+  const uploadBtn = document.getElementById('uploadBtn');
+
+  ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(e => {
+    dropZone.addEventListener(e, e => {e.preventDefault(); e.stopPropagation();});
+  });
+
+  ['dragenter', 'dragover'].forEach(e => dropZone.addEventListener(e, () => dropZone.classList.add('dragover')));
+  ['dragleave', 'drop'].forEach(e => dropZone.addEventListener(e, () => dropZone.classList.remove('dragover')));
+
+  dropZone.addEventListener('drop', e => handleFiles(e.dataTransfer.files));
+  dropZone.addEventListener('click', () => fileInput.click());
+  fileInput.addEventListener('change', e => handleFiles(e.target.files));
+
+  function handleFiles(files) {
+    if (files.length > 0) {
+      const file = files[0];
+      if (!file.name.endsWith('.csv')) {
+        alert('CSV files only');
+        return;
+      }
+      fileName.textContent = file.name.substring(0, 12);
+      dropZone.style.display = 'none';
+      fileInfo.style.display = 'flex';
+      uploadBtn.disabled = false;
+      window.currentFile = file;
+    }
+  }
+
+  removeFile.addEventListener('click', e => {
+    e.stopPropagation();
+    window.currentFile = null;
+    fileInput.value = '';
+    fileInfo.style.display = 'none';
+    dropZone.style.display = 'block';
+    uploadBtn.disabled = true;
+    document.getElementById('upload-results').style.display = 'none';
+    document.getElementById('empty-state').style.display = 'block';
+  });
+
+  uploadBtn.addEventListener('click', async () => {
+    if (!window.currentFile) return;
+    uploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ...';
+    uploadBtn.disabled = true;
+    const formData = new FormData();
+    formData.append('file', window.currentFile);
+    try {
+      const response = await fetch('/predict_file', {method: 'POST', body: formData});
+      const data = await response.json();
+      if (!response.ok || !data.success) {
+        alert('❌ ' + (data.error || 'Failed'));
+        return;
+      }
+      document.getElementById('meanPred').textContent = data.summary.mean_pred;
+      document.getElementById('maxPred').textContent = data.summary.max_pred;
+      document.getElementById('minPred').textContent = data.summary.min_pred;
+      const tbody = document.getElementById('previewBody');
+      tbody.innerHTML = '';
+      data.summary.predictions.forEach((pred, i) => {
+        tbody.innerHTML += `<tr><td>${i + 1}</td><td>${pred.toFixed(1)}</td></tr>`;
+      });
+      const blob = new Blob([data.download_data], {type: 'text/csv'});
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'pred_' + new Date().toISOString().slice(0, 10) + '.csv';
+      document.getElementById('downloadBtn').onclick = e => {e.preventDefault(); link.click(); URL.revokeObjectURL(url);};
+      document.getElementById('empty-state').style.display = 'none';
+      document.getElementById('upload-results').style.display = 'block';
+    } catch (error) {
+      alert('❌ Error: ' + error.message);
+    } finally {
+      uploadBtn.innerHTML = '<i class="fas fa-zap"></i> Predict';
+      uploadBtn.disabled = false;
+    }
+  });
+
+  document.getElementById('predictionForm').addEventListener('submit', async e => {
+    e.preventDefault();
+    const submitBtn = document.querySelector('.manual-submit');
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ...';
+    submitBtn.disabled = true;
+    
+    const formData = new FormData(e.target);
+    try {
+      const response = await fetch('/prediction', {
+        method: 'POST',
+        body: formData,
+        headers: {'X-Requested-With': 'XMLHttpRequest'}
+      });
+      const data = await response.json();
+      
+      if (!response.ok || !data.success) {
+        alert('❌ ' + (data.error || 'Prediction failed'));
+        return;
+      }
+      
+      // Update UI with results
+      document.getElementById('empty-state').style.display = 'none';
+      document.getElementById('upload-results').style.display = 'none';
+      document.getElementById('manual-results').style.display = 'block';
+      document.getElementById('singlePred').textContent = data.prediction;
+      document.getElementById('singleStatus').innerHTML = '<span class="' + (data.status.includes('Wastage') ? 'status-warning' : 'status-ok') + '">' + data.status + '</span>';
+      document.getElementById('singleTip').innerHTML = '<p style="font-size: 0.75rem;">' + (data.status.includes('Wastage') ? '💡 Optimize HVAC/lighting' : '✅ Great efficiency!') + '</p>';
+      
+    } catch (error) {
+      alert('❌ Error: ' + error.message);
+    } finally {
+      submitBtn.innerHTML = '<i class="fas fa-lightning-bolt"></i> Predict';
+      submitBtn.disabled = false;
+    }
+  });
+
+  {% if prediction %}
+  document.getElementById('empty-state').style.display = 'none';
+  document.getElementById('manual-results').style.display = 'block';
+  document.getElementById('singlePred').textContent = '{{ prediction }}';
+  document.getElementById('singleStatus').innerHTML = '<span class="{% if status == "⚠️ Energy Wastage" %}status-warning{% else %}status-ok{% endif %}">{{ status }}</span>';
+  document.getElementById('singleTip').innerHTML = '<p style="font-size: 0.75rem;">{% if status == "⚠️ Energy Wastage" %}💡 Optimize HVAC/lighting{% else %}✅ Great efficiency!{% endif %}</p>';
+  {% endif %}
+</script>
+
+{% endblock %}

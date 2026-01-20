@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About - Smart Energy Predictor</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* ABOUT PAGE SPECIFIC STYLES */
+        .about-navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0, 10, 25, 0.95);
+            backdrop-filter: blur(25px);
+            padding: 1rem 2.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 10000;
+            border-bottom: 1px solid rgba(79, 209, 197, 0.3);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+        }
+
+        .about-nav-brand {
+            font-size: 1.6rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #4fd1c5, #81e6d9);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            cursor: pointer;
+        }
+
+        .about-nav-links {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .about-nav-links a {
+            color: #e2e8f0;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            padding: 0.5rem 1rem;
+            border-radius: 50px;
+        }
+
+        .about-nav-links a:hover {
+            color: #4fd1c5;
+            background: rgba(79, 209, 197, 0.15);
+        }
+
+        .about-container {
+            margin-top: 100px;
+            padding: 0 2.5rem;
+        }
+
+        /* HERO SECTION */
+        .about-hero {
+            text-align: center;
+            padding: 4rem 0;
+            margin-bottom: 6rem;
+        }
+
+        .about-hero h1 {
+            font-size: 3.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #4fd1c5, #81e6d9, #a8e6cf);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 1.5rem;
+            line-height: 1.2;
+        }
+
+        .about-hero p {
+            font-size: 1.3rem;
+            color: #cbd5e1;
+            max-width: 800px;
+            margin: 0 auto 2rem;
+            line-height: 1.8;
+        }
+
+        .about-hero .highlight {
+            color: #4fd1c5;
+            font-weight: 600;
+        }
+
+        /* PROBLEM SECTION */
+        .problem-section {
+            margin-bottom: 8rem;
+            padding: 4rem;
+            background: linear-gradient(135deg, rgba(79, 209, 197, 0.1), rgba(161, 230, 207, 0.05));
+            border-radius: 20px;
+            border: 1px solid rgba(79, 209, 197, 0.2);
+            backdrop-filter: blur(10px);
+        }
+
+        .problem-section h2 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #f5f5f5;
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .problem-section h2 i {
+            color: #ef5350;
+            font-size: 2.5rem;
+        }
+
+        .problem-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+        }
+
+        .problem-card {
+            background: rgba(15, 20, 40, 0.6);
+            padding: 2rem;
+            border-radius: 15px;
+            border: 1px solid rgba(79, 209, 197, 0.2);
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .problem-card:hover {
+            transform: translateY(-10px);
+            border-color: rgba(79, 209, 197, 0.5);
+            box-shadow: 0 20px 40px rgba(79, 209, 197, 0.2);
+        }
+
+        .problem-card i {
+            font-size: 3rem;
+            color: #ef5350;
+            margin-bottom: 1rem;
+            display: block;
+        }
+
+        .problem-card h3 {
+            font-size: 1.3rem;
+            margin-bottom: 1rem;
+            color: #f5f5f5;
+        }
+
+        .problem-card p {
+            color: #cbd5e1;
+            line-height: 1.6;
+        }
+
+        /* SOLUTION SECTION */
+        .solution-section {
+            margin-bottom: 8rem;
+            text-align: center;
+        }
+
+        .solution-section h2 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #f5f5f5;
+            margin-bottom: 1rem;
+        }
+
+        .solution-intro {
+            font-size: 1.2rem;
+            color: #cbd5e1;
+            max-width: 800px;
+            margin: 0 auto 4rem;
+            line-height: 1.8;
+        }
+
+        .solution-intro .highlight {
+            color: #4fd1c5;
+            font-weight: 600;
+        }
+
+        /* FEATURES SECTION */
+        .features-section {
+            margin-bottom: 6rem;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2.5rem;
+            margin-top: 3rem;
+        }
+
+        .feature-card {
+            background: linear-gradient(135deg, rgba(79, 209, 197, 0.1), rgba(161, 230, 207, 0.05));
+            padding: 2.5rem;
+            border-radius: 18px;
+            border: 1px solid rgba(79, 209, 197, 0.3);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .feature-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #4fd1c5, #81e6d9);
+        }
+
+        .feature-card:hover {
+            transform: translateY(-15px);
+            border-color: rgba(79, 209, 197, 0.6);
+            box-shadow: 0 25px 50px rgba(79, 209, 197, 0.25);
+        }
+
+        .feature-icon {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #4fd1c5, #81e6d9);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1.5rem;
+            font-size: 1.8rem;
+            color: #0c0c1a;
+        }
+
+        .feature-card h3 {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #f5f5f5;
+            margin-bottom: 1rem;
+            text-align: left;
+        }
+
+        .feature-card p {
+            color: #cbd5e1;
+            line-height: 1.7;
+            text-align: left;
+            margin-bottom: 1rem;
+        }
+
+        .feature-benefits {
+            text-align: left;
+            color: #a1e6cf;
+            font-size: 0.95rem;
+        }
+
+        .feature-benefits li {
+            margin: 0.5rem 0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .feature-benefits i {
+            color: #4fd1c5;
+            font-size: 0.8rem;
+        }
+
+        /* STATS SECTION */
+        .stats-section {
+            margin-bottom: 8rem;
+            padding: 4rem;
+            background: linear-gradient(135deg, rgba(79, 209, 197, 0.15), rgba(161, 230, 207, 0.1));
+            border-radius: 20px;
+            border: 1px solid rgba(79, 209, 197, 0.3);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .stat-box {
+            text-align: center;
+            padding: 2rem;
+            background: rgba(15, 20, 40, 0.5);
+            border-radius: 15px;
+            border: 1px solid rgba(79, 209, 197, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .stat-box:hover {
+            transform: scale(1.05);
+            border-color: rgba(79, 209, 197, 0.5);
+            box-shadow: 0 15px 35px rgba(79, 209, 197, 0.2);
+        }
+
+        .stat-number {
+            font-size: 2.8rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #4fd1c5, #81e6d9);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            color: #cbd5e1;
+            font-size: 1.1rem;
+            font-weight: 500;
+        }
+
+        /* VISION SECTION */
+        .vision-section {
+            margin-bottom: 8rem;
+            padding: 4rem;
+            background: linear-gradient(135deg, rgba(79, 209, 197, 0.12), rgba(161, 230, 207, 0.08));
+            border-radius: 20px;
+            border: 2px solid rgba(79, 209, 197, 0.4);
+            text-align: center;
+        }
+
+        .vision-section h2 {
+            font-size: 2.3rem;
+            font-weight: 700;
+            color: #f5f5f5;
+            margin-bottom: 1.5rem;
+        }
+
+        .vision-section p {
+            font-size: 1.15rem;
+            color: #cbd5e1;
+            max-width: 900px;
+            margin: 0 auto;
+            line-height: 1.8;
+        }
+
+        .vision-highlight {
+            color: #4fd1c5;
+            font-weight: 600;
+        }
+
+        /* CTA SECTION */
+        .cta-section {
+            text-align: center;
+            padding: 4rem;
+            margin-bottom: 4rem;
+            background: linear-gradient(135deg, rgba(79, 209, 197, 0.2), rgba(161, 230, 207, 0.15));
+            border-radius: 20px;
+            border: 1px solid rgba(79, 209, 197, 0.4);
+        }
+
+        .cta-section h2 {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #f5f5f5;
+            margin-bottom: 1.5rem;
+        }
+
+        .cta-buttons {
+            display: flex;
+            gap: 1.5rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 2rem;
+        }
+
+        .cta-btn {
+            padding: 1rem 2.5rem;
+            border-radius: 50px;
+            font-size: 1.05rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.8rem;
+            cursor: pointer;
+            border: none;
+        }
+
+        .cta-btn-primary {
+            background: linear-gradient(135deg, #4fd1c5, #81e6d9);
+            color: #0c0c1a;
+        }
+
+        .cta-btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 20px 40px rgba(79, 209, 197, 0.3);
+        }
+
+        .cta-btn-secondary {
+            background: transparent;
+            color: #4fd1c5;
+            border: 2px solid #4fd1c5;
+        }
+
+        .cta-btn-secondary:hover {
+            background: rgba(79, 209, 197, 0.15);
+            transform: translateY(-3px);
+        }
+
+        /* FOOTER */
+        .about-footer {
+            text-align: center;
+            padding: 2rem;
+            color: #64748b;
+            border-top: 1px solid rgba(79, 209, 197, 0.2);
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 768px) {
+            .about-hero h1 {
+                font-size: 2.2rem;
+            }
+
+            .problem-section,
+            .stats-section,
+            .vision-section,
+            .cta-section {
+                padding: 2rem;
+            }
+
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .cta-buttons {
+                flex-direction: column;
+            }
+
+            .about-container {
+                padding: 0 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body class="landing-body">
+    <!-- NAVBAR -->
+    <div class="about-navbar">
+        <div class="about-nav-brand" onclick="window.location.href='/'">⚡ Smart Energy Predictor</div>
+        <div class="about-nav-links">
+            <a href="{{ url_for('dashboard') if current_user.is_authenticated else url_for('login') }}">Dashboard</a>
+            {% if current_user.is_authenticated %}
+                <a href="{{ url_for('logout') }}" style="color: #ef5350;">Logout</a>
+            {% else %}
+                <a href="{{ url_for('login') }}">Login</a>
+                <a href="{{ url_for('register') }}" style="background: rgba(79, 209, 197, 0.2); color: #4fd1c5;">Register</a>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div class="about-container">
+        <!-- HERO SECTION -->
+        <section class="about-hero">
+            <h1>About Smart Energy Predictor</h1>
+            <p>
+                Empowering organizations to <span class="highlight">predict, optimize, and reduce</span> 
+                energy consumption with <span class="highlight">AI-powered intelligence</span>.
+            </p>
+        </section>
+
+        <!-- PROBLEM SECTION -->
+        <section class="problem-section">
+            <h2><i class="fas fa-exclamation-circle"></i> The Problem We Solve</h2>
+            <div class="problem-content">
+                <div class="problem-card">
+                    <i class="fas fa-chart-line"></i>
+                    <h3>Unpredictable Costs</h3>
+                    <p>Energy expenses fluctuate unpredictably, making budgeting and cost management extremely challenging for organizations.</p>
+                </div>
+                <div class="problem-card">
+                    <i class="fas fa-earth-americas"></i>
+                    <h3>Environmental Impact</h3>
+                    <p>Without visibility into energy patterns, it's impossible to identify waste and implement effective sustainability initiatives.</p>
+                </div>
+                <div class="problem-card">
+                    <i class="fas fa-blind"></i>
+                    <h3>Lack of Visibility</h3>
+                    <p>Most organizations have no real-time insight into their energy consumption patterns or factors affecting their usage.</p>
+                </div>
+                <div class="problem-card">
+                    <i class="fas fa-hourglass-end"></i>
+                    <h3>Delayed Decision Making</h3>
+                    <p>Without predictive capabilities, organizations can't proactively optimize operations or plan maintenance efficiently.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- SOLUTION SECTION -->
+        <section class="solution-section">
+            <h2>Our Solution</h2>
+            <p class="solution-intro">
+                Smart Energy Predictor combines <span class="highlight">machine learning</span> and 
+                <span class="highlight">real-time analytics</span> to give you complete control over your energy future.
+                Predict consumption, identify optimization opportunities, and achieve significant cost savings—all in one intelligent platform.
+            </p>
+
+            <!-- FEATURES -->
+            <div class="features-section">
+                <h2 style="font-size: 2rem; text-align: center; margin-bottom: 3rem;">Powerful Features</h2>
+                <div class="features-grid">
+                    <!-- Feature 1 -->
+                    <div class="feature-card">
+                        <div class="feature-icon"><i class="fas fa-brain"></i></div>
+                        <h3>AI-Powered Predictions</h3>
+                        <p>
+                            Our advanced LightGBM machine learning model analyzes historical patterns, weather data, 
+                            and operational factors to predict energy consumption with 95%+ accuracy.
+                        </p>
+                        <ul class="feature-benefits">
+                            <li><i class="fas fa-check-circle"></i> Real-time predictions</li>
+                            <li><i class="fas fa-check-circle"></i> 24-hour forecasts</li>
+                            <li><i class="fas fa-check-circle"></i> Pattern recognition</li>
+                        </ul>
+                    </div>
+
+                    <!-- Feature 2 -->
+                    <div class="feature-card">
+                        <div class="feature-icon"><i class="fas fa-sliders-h"></i></div>
+                        <h3>Smart Optimization</h3>
+                        <p>
+                            Get actionable insights on how temperature, occupancy, lighting, and HVAC settings 
+                            impact your energy usage. Make data-driven decisions to reduce waste.
+                        </p>
+                        <ul class="feature-benefits">
+                            <li><i class="fas fa-check-circle"></i> What-if scenarios</li>
+                            <li><i class="fas fa-check-circle"></i> Optimization tips</li>
+                            <li><i class="fas fa-check-circle"></i> Impact analysis</li>
+                        </ul>
+                    </div>
+
+                    <!-- Feature 3 -->
+                    <div class="feature-card">
+                        <div class="feature-icon"><i class="fas fa-upload"></i></div>
+                        <h3>Batch Predictions</h3>
+                        <p>
+                            Upload CSV files to get predictions for multiple scenarios at once. Perfect for 
+                            analyzing weekly, monthly, or seasonal energy patterns across your facility.
+                        </p>
+                        <ul class="feature-benefits">
+                            <li><i class="fas fa-check-circle"></i> Bulk CSV upload</li>
+                            <li><i class="fas fa-check-circle"></i> Multi-scenario analysis</li>
+                            <li><i class="fas fa-check-circle"></i> Detailed reports</li>
+                        </ul>
+                    </div>
+
+                    <!-- Feature 4 -->
+                    <div class="feature-card">
+                        <div class="feature-icon"><i class="fas fa-comments"></i></div>
+                        <h3>AI Chatbot Assistant</h3>
+                        <p>
+                            Powered by Google Gemini AI, our chatbot provides instant answers to your energy questions, 
+                            best practices, and personalized recommendations based on your building's data.
+                        </p>
+                        <ul class="feature-benefits">
+                            <li><i class="fas fa-check-circle"></i> 24/7 availability</li>
+                            <li><i class="fas fa-check-circle"></i> Expert advice</li>
+                            <li><i class="fas fa-check-circle"></i> Smart recommendations</li>
+                        </ul>
+                    </div>
+
+                    <!-- Feature 5 -->
+                    <div class="feature-card">
+                        <div class="feature-icon"><i class="fas fa-lock"></i></div>
+                        <h3>Secure User Authentication</h3>
+                        <p>
+                            Create personalized accounts with secure login and password protection. Your data is encrypted 
+                            and stored safely in our SQLite database with industry-standard security practices.
+                        </p>
+                        <ul class="feature-benefits">
+                            <li><i class="fas fa-check-circle"></i> Encrypted passwords</li>
+                            <li><i class="fas fa-check-circle"></i> User authentication</li>
+                            <li><i class="fas fa-check-circle"></i> Data privacy</li>
+                        </ul>
+                    </div>
+
+                    <!-- Feature 6 -->
+                    <div class="feature-card">
+                        <div class="feature-icon"><i class="fas fa-star"></i></div>
+                        <h3>Feedback & Ratings</h3>
+                        <p>
+                            Share your experience and rate our platform. Your feedback helps us continuously improve 
+                            and provide better predictions and features tailored to your needs.
+                        </p>
+                        <ul class="feature-benefits">
+                            <li><i class="fas fa-check-circle"></i> User ratings</li>
+                            <li><i class="fas fa-check-circle"></i> Feature requests</li>
+                            <li><i class="fas fa-check-circle"></i> Continuous improvement</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- STATS SECTION -->
+        <section class="stats-section">
+            <h2 style="font-size: 2rem; text-align: center; margin-bottom: 1rem; color: #f5f5f5;">Why Choose Us?</h2>
+            <div class="stats-grid">
+                <div class="stat-box">
+                    <div class="stat-number">95%</div>
+                    <div class="stat-label">Prediction Accuracy</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-number">40%</div>
+                    <div class="stat-label">Average Cost Savings</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-number">24/7</div>
+                    <div class="stat-label">Real-time Monitoring</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-number">31+</div>
+                    <div class="stat-label">ML Features Analyzed</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- VISION SECTION -->
+        <section class="vision-section">
+            <h2>Our Vision</h2>
+            <p>
+                We envision a world where <span class="vision-highlight">every organization</span> has the tools to make 
+                <span class="vision-highlight">intelligent energy decisions</span>. By leveraging artificial intelligence 
+                and data analytics, we're helping businesses reduce costs, minimize environmental impact, and build 
+                <span class="vision-highlight">sustainable operations</span> for the future.
+            </p>
+        </section>
+
+        <!-- CTA SECTION -->
+        <section class="cta-section">
+            <h2>Ready to Transform Your Energy Management?</h2>
+            <p style="color: #cbd5e1; margin-bottom: 2rem;">
+                Join organizations already saving money and reducing their carbon footprint with Smart Energy Predictor.
+            </p>
+            <div class="cta-buttons">
+                <a href="{{ url_for('register') }}" class="cta-btn cta-btn-primary">
+                    <i class="fas fa-rocket"></i> Get Started Free
+                </a>
+                <a href="{{ url_for('login') }}" class="cta-btn cta-btn-secondary">
+                    <i class="fas fa-sign-in-alt"></i> Login to Dashboard
+                </a>
+            </div>
+        </section>
+    </div>
+
+    <!-- FOOTER -->
+    <div class="about-footer">
+        <p>&copy; 2026 Smart Energy Predictor. All rights reserved. | Powered by AI & Machine Learning</p>
+    </div>
+</body>
+</html>
