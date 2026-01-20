@@ -18,6 +18,7 @@ export const FormPrediction = () => {
   const [prediction, setPrediction] = useState(null);
   const [loading, setLoading] = useState(false);
   const [toast, setToast] = useState(null);
+  const [validationErrors, setValidationErrors] = useState([]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -25,19 +26,47 @@ export const FormPrediction = () => {
       ...prev,
       [name]: parseFloat(value) || value,
     }));
+    setValidationErrors([]); // Clear validation errors on input change
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setPrediction(null);
+    setValidationErrors([]);
 
     try {
       const response = await predictionService.predictForm(formData);
-      setPrediction(response.data);
-      setToast({ type: 'success', message: 'Prediction successful!' });
+      
+      if (response.data.success) {
+        setPrediction(response.data);
+        setToast({ type: 'success', message: response.data.message || 'Prediction successful!' });
+      } else {
+        setPrediction(response.data);
+        setToast({ type: 'success', message: 'Prediction received' });
+      }
     } catch (error) {
-      setToast({ type: 'error', message: error.response?.data?.error || 'Prediction failed' });
+      const errorData = error.response?.data;
+      
+      if (errorData?.details && Array.isArray(errorData.details)) {
+        // Validation errors returned as array
+        setValidationErrors(errorData.details);
+        setToast({ 
+          type: 'error', 
+          message: 'Please fix validation errors' 
+        });
+      } else if (errorData?.details) {
+        // Single error message
+        setToast({ 
+          type: 'error', 
+          message: errorData.details || errorData.error || 'Prediction failed' 
+        });
+      } else {
+        setToast({ 
+          type: 'error', 
+          message: error.response?.data?.error || error.message || 'Prediction failed' 
+        });
+      }
     } finally {
       setLoading(false);
     }
@@ -52,6 +81,19 @@ export const FormPrediction = () => {
         <div className="lg:col-span-1">
           <div className="card animate-slideIn">
             <h2 className="text-2xl font-bold mb-6">Energy Parameters</h2>
+            
+            {/* Validation Errors Display */}
+            {validationErrors.length > 0 && (
+              <div className="mb-6 p-4 bg-red-500/10 border border-red-500/30 rounded-lg">
+                <p className="text-sm font-semibold text-red-400 mb-2">Validation Errors:</p>
+                <ul className="text-xs text-red-300 space-y-1">
+                  {validationErrors.map((error, idx) => (
+                    <li key={idx}>• {error}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            
             <form onSubmit={handleSubmit} className="space-y-6">
               <div>
                 <label className="block text-sm font-medium mb-2 flex items-center gap-2">

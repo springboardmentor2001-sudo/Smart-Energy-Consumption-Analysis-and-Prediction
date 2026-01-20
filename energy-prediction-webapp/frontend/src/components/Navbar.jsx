@@ -1,15 +1,15 @@
-import React, { useContext } from 'react';
+import React, { useContext, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import { ThemeContext } from '../context/ThemeContext';
-import { Menu, X, Sun, Moon, LogOut } from 'lucide-react';
-import { useState } from 'react';
+import { Menu, X, Sun, Moon, LogOut, User, Settings } from 'lucide-react';
 
 export const Navbar = () => {
-  const { isAuthenticated, logout } = useContext(AuthContext);
+  const { isAuthenticated, logout, user } = useContext(AuthContext);
   const { isDark, toggleTheme } = useContext(ThemeContext);
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
 
   const handleLogout = () => {
     logout();
@@ -17,10 +17,13 @@ export const Navbar = () => {
   };
 
   const navItems = [
-    { label: 'Home', path: '/' },
+    { label: 'Home', path: '/dashboard' },
+    { label: 'My Grade', path: '/energy-report' },
     { label: 'Upload Prediction', path: '/upload-prediction' },
     { label: 'Form Prediction', path: '/form-prediction' },
     { label: 'Report', path: '/report' },
+    { label: 'History', path: '/prediction-history' },
+    { label: 'Reviews', path: '/reviews' },
     { label: 'Chatbot', path: '/chatbot' },
   ];
 
@@ -57,13 +60,47 @@ export const Navbar = () => {
           </button>
 
           {isAuthenticated ? (
-            <button
-              onClick={handleLogout}
-              className="p-2 rounded-lg hover:bg-red-600/20 text-red-400 transition-colors flex items-center gap-2"
-            >
-              <LogOut size={20} />
-              <span className="hidden sm:inline">Logout</span>
-            </button>
+            <div className="relative">
+              <button
+                onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+                className="p-2 rounded-lg hover:bg-slate-700 transition-colors flex items-center gap-2 text-blue-400 hover:text-blue-300"
+              >
+                <User size={20} />
+                <span className="hidden sm:inline text-sm">{user?.name || 'User'}</span>
+              </button>
+              
+              {isUserMenuOpen && (
+                <div className="absolute right-0 mt-2 w-48 bg-slate-700 border border-slate-600 rounded-lg shadow-lg z-50">
+                  <Link
+                    to="/profile"
+                    onClick={() => setIsUserMenuOpen(false)}
+                    className="block px-4 py-2 hover:bg-slate-600 transition-colors flex items-center gap-2"
+                  >
+                    <User size={16} />
+                    My Profile
+                  </Link>
+                  <Link
+                    to="/settings"
+                    onClick={() => setIsUserMenuOpen(false)}
+                    className="block px-4 py-2 hover:bg-slate-600 transition-colors flex items-center gap-2"
+                  >
+                    <Settings size={16} />
+                    Settings
+                  </Link>
+                  <hr className="border-slate-600 my-2" />
+                  <button
+                    onClick={() => {
+                      handleLogout();
+                      setIsUserMenuOpen(false);
+                    }}
+                    className="w-full text-left px-4 py-2 hover:bg-slate-600 transition-colors flex items-center gap-2 text-red-400 hover:text-red-300"
+                  >
+                    <LogOut size={16} />
+                    Logout
+                  </button>
+                </div>
+              )}
+            </div>
           ) : (
             <Link to="/login" className="btn btn-primary text-sm">
               Login

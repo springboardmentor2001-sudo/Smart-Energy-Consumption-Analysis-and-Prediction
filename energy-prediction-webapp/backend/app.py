@@ -5,24 +5,50 @@ Serves predictions, handles authentication, file uploads, and chatbot integratio
 
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
+from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity, verify_jwt_in_request
 import os
 from dotenv import load_dotenv
 import joblib
-import numpy as np
-import pandas as pd
 from functools import wraps
 from datetime import timedelta
 import json
-import google.generativeai as genai
-from werkzeug.utils import secure_filename
-import PyPDF2
 import io
+
+# Lazy imports for Python 3.14 compatibility
+try:
+    import numpy as np
+    import pandas as pd
+except ImportError:
+    np = None
+    pd = None
+
+# Skip google-generativeai for Python 3.14 compatibility - use fallback
+genai = None
+try:
+    import google.generativeai as genai_module
+    genai = genai_module
+except Exception as e:
+    print(f"[WARNING] Skipping google-generativeai: {e}")
+    genai = None
+
+from werkzeug.utils import secure_filename
+try:
+    import PyPDF2
+except ImportError:
+    PyPDF2 = None
 
 load_dotenv()
 
 app = Flask(__name__)
-CORS(app, resources={r"/api/*": {"origins": "*"}})
+CORS(app, resources={r"/api/*": {"origins": "*", "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"], "allow_headers": ["Content-Type", "Authorization"]}})
+
+# Add response headers for CORS preflight
+@app.after_request
+def after_request(response):
+    response.headers.add('Access-Control-Allow-Origin', '*')
+    response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
+    response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
+    return response
 
 # Configuration
 app.config['JWT_SECRET_KEY'] = os.getenv('JWT_SECRET_KEY', 'your-secret-key-change-in-production')
@@ -38,8 +64,11 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 jwt = JWTManager(app)
 
-# Load the trained model from multiple possible locations
+# Load the trained model and scaler from multiple possible locations
 energy_model = None
+feature_scaler = None
+model_performance = None
+
 candidate_paths = [
     os.path.join(os.path.dirname(__file__), '..', 'energy_model.pkl'),
     os.path.join(os.path.dirname(__file__), 'energy_model.pkl'),
@@ -47,6 +76,19 @@ candidate_paths = [
     r"C:\Users\Pranjal Giri\OneDrive\Desktop\Infosys springboard\energy_model.pkl"
 ]
 
+scaler_paths = [
+    os.path.join(os.path.dirname(__file__), '..', 'feature_scaler.pkl'),
+    os.path.join(os.path.dirname(__file__), 'feature_scaler.pkl'),
+    os.path.join(os.getcwd(), 'feature_scaler.pkl'),
+]
+
+performance_paths = [
+    os.path.join(os.path.dirname(__file__), '..', 'model_performance.pkl'),
+    os.path.join(os.path.dirname(__file__), 'model_performance.pkl'),
+    os.path.join(os.getcwd(), 'model_performance.pkl'),
+]
+
+# Load main model
 for p in candidate_paths:
     try:
         abs_p = os.path.abspath(p)
@@ -59,20 +101,46 @@ for p in candidate_paths:
     except Exception as e:
         print(f"[INFO] Attempt to load model at {abs_p} failed: {e}")
 
+# Load scaler
+for p in scaler_paths:
+    try:
+        abs_p = os.path.abspath(p)
+        if os.path.exists(abs_p):
+            feature_scaler = joblib.load(abs_p)
+            print(f"[OK] Feature scaler loaded from {abs_p}")
+            break
+    except Exception as e:
+        print(f"[INFO] Scaler not found at {abs_p}")
+
+# Load performance metrics
+for p in performance_paths:
+    try:
+        abs_p = os.path.abspath(p)
+        if os.path.exists(abs_p):
+            model_performance = joblib.load(abs_p)
+            print(f"[OK] Model performance metrics loaded")
+            break
+    except Exception as e:
+        print(f"[INFO] Performance metrics not found")
+
 if energy_model is None:
     print("[WARNING] Energy model not found in candidate paths")
+    
+if feature_scaler is None:
+    print("[WARNING] Feature scaler not found - using default scaler")
 
 # Initialize Gemini API
 GEMINI_API_KEY = os.getenv('GEMINI_API_KEY', '')
-if GEMINI_API_KEY:
+if GEMINI_API_KEY and genai:
     try:
         genai.configure(api_key=GEMINI_API_KEY)
         print("[OK] Gemini API configured")
     except Exception as e:
         print(f"[WARNING] Gemini API configuration failed: {e}")
         GEMINI_API_KEY = ''
+        genai = None
 else:
-    print("[WARNING] Gemini API key not set in environment")
+    print("[INFO] Gemini API not available - chatbot will use fallback responses")
 
 # In-memory user database (replace with real database in production)
 users_db = {
@@ -80,33 +148,91 @@ users_db = {
     'test@example.com': {'password': 'test123', 'name': 'Test User'}
 }
 
-# Feature engineering for predictions
+# Feature engineering for predictions - MUST MATCH training_improved_model.py exactly (28 features)
 def engineer_features(input_data):
-    """Apply same feature engineering as training data"""
+    """Apply comprehensive feature engineering matching training pipeline exactly"""
     features = {}
     
-    # Basic features
-    features['Temperature'] = input_data.get('temperature', 20)
-    features['Humidity'] = input_data.get('humidity', 50)
-    features['SquareFootage'] = input_data.get('square_footage', 5000)
+    # Extract input with defaults
+    temperature = float(input_data.get('temperature', 20))
+    humidity = float(input_data.get('humidity', 50))
+    square_footage = float(input_data.get('square_footage', 5000))
+    month = int(input_data.get('month', 1))
+    hvac_appliances = int(input_data.get('hvac_appliances', 1))
+    time_of_day = int(input_data.get('time', 12))
     
-    # Time-based features
-    month = input_data.get('month', 1)
+    # ========== BASIC FEATURES (6 features) ==========
+    features['Temperature'] = temperature
+    features['Humidity'] = humidity
+    features['SquareFootage'] = square_footage
     features['Month'] = month
+    features['Hour'] = time_of_day
+    features['HVAC_Appliances'] = hvac_appliances
+    
+    # ========== TEMPORAL FEATURES (4 features) ==========
+    # Cyclical encoding for month (sine and cosine) - MATCHES training
     features['Month_sin'] = np.sin(2 * np.pi * month / 12)
     features['Month_cos'] = np.cos(2 * np.pi * month / 12)
     
-    # Degree days
-    features['HDD'] = max(0, 18 - features['Temperature'])
-    features['CDD'] = max(0, features['Temperature'] - 22)
-    features['HDD_Squared'] = features['HDD'] ** 2
-    features['CDD_Squared'] = features['CDD'] ** 2
+    # Hour cyclical encoding - MATCHES training
+    features['Hour_sin'] = np.sin(2 * np.pi * time_of_day / 24)
+    features['Hour_cos'] = np.cos(2 * np.pi * time_of_day / 24)
     
-    # Other features
-    features['Heating_On'] = 1 if features['HDD'] > 0 else 0
-    features['Cooling_On'] = 1 if features['CDD'] > 0 else 0
+    # ========== DEGREE DAYS (6 features) ==========
+    # Heating Degree Days (HDD) - base 18°C (matches training)
+    hdd = max(0, 18 - temperature)
+    cdd = max(0, temperature - 22)
     
-    return pd.DataFrame([features])
+    features['HDD'] = hdd
+    features['CDD'] = cdd
+    features['HDD_Squared'] = hdd ** 2
+    features['CDD_Squared'] = cdd ** 2
+    
+    # Degree day interactions
+    features['HDD_x_SqFt'] = hdd * (square_footage / 1000)
+    features['CDD_x_SqFt'] = cdd * (square_footage / 1000)
+    
+    # ========== INTERACTION & DERIVED FEATURES (2 features) ==========
+    features['Temp_Humidity'] = temperature * humidity / 100
+    features['Temp_SqFt'] = temperature * (square_footage / 5000)
+    
+    # ========== ON/OFF FLAGS (4 features) ==========
+    # Use HDD/CDD for flags - MATCHES training exactly
+    features['Heating_On'] = 1 if hdd > 0 else 0
+    features['Cooling_On'] = 1 if cdd > 0 else 0
+    features['Peak_Hours'] = 1 if 14 <= time_of_day <= 19 else 0
+    features['Night_Hours'] = 1 if (time_of_day >= 22 or time_of_day <= 6) else 0
+    
+    # ========== DERIVED FEATURES (3 features) ==========
+    # Match training exactly
+    features['Temp_Deviation'] = abs(temperature - 20)
+    features['Humidity_Deviation'] = abs(humidity - 50)
+    features['LargeBuilding'] = 1 if square_footage > 7500 else 0
+    
+    # ========== POLYNOMIAL FEATURES (3 features) ==========
+    features['Temp_Squared'] = temperature ** 2
+    features['SqFt_Squared'] = (square_footage / 1000) ** 2
+    features['Humidity_Squared'] = humidity ** 2
+    
+    # Total: 28 features
+    
+    # Create DataFrame with features in EXACT order matching training
+    feature_order = [
+        'Temperature', 'Humidity', 'SquareFootage', 'Month', 'Hour', 'HVAC_Appliances',
+        'Month_sin', 'Month_cos', 'Hour_sin', 'Hour_cos',
+        'HDD', 'CDD', 'HDD_Squared', 'CDD_Squared',
+        'HDD_x_SqFt', 'CDD_x_SqFt',
+        'Temp_Humidity', 'Temp_SqFt',
+        'Heating_On', 'Cooling_On', 'Peak_Hours', 'Night_Hours',
+        'Temp_Deviation', 'Humidity_Deviation', 'LargeBuilding',
+        'Temp_Squared', 'SqFt_Squared', 'Humidity_Squared'
+    ]
+    
+    # Reorder features to match training
+    ordered_features = {k: features[k] for k in feature_order if k in features}
+    df = pd.DataFrame([ordered_features])
+    
+    return df
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
@@ -185,48 +311,146 @@ def get_profile():
 @app.route('/api/predict/form', methods=['POST'])
 @jwt_required()
 def predict_form():
-    """Predict energy consumption from form input"""
+    """Predict energy consumption from form input with validation"""
     try:
         data = request.get_json()
         
-        # Engineer features
-        features_df = engineer_features(data)
+        if not data:
+            return jsonify({'error': 'No input data provided'}), 400
         
-        # Make prediction
-        if energy_model is None:
-            # Fallback: generate realistic mock prediction
-            base_pred = 200 + (data.get('temperature', 20) * 10) + (data.get('square_footage', 5000) / 100)
+        # ========== INPUT VALIDATION ==========
+        # Validate required fields
+        required_fields = {
+            'temperature': (float, -10, 50, 'Temperature (°C)'),
+            'humidity': (float, 0, 100, 'Humidity (%)'),
+            'square_footage': (float, 500, 50000, 'Square footage (sqft)'),
+            'month': (int, 1, 12, 'Month (1-12)'),
+            'hvac_appliances': (int, 0, 20, 'HVAC Appliances count'),
+            'time': (int, 0, 23, 'Hour of day (0-23)')
+        }
+        
+        validation_errors = []
+        
+        for field, (field_type, min_val, max_val, field_label) in required_fields.items():
+            if field not in data:
+                validation_errors.append(f"Missing: {field_label}")
+                continue
+            
+            try:
+                value = field_type(data[field])
+                if not (min_val <= value <= max_val):
+                    validation_errors.append(
+                        f"{field_label} must be between {min_val} and {max_val}. Got {value}."
+                    )
+            except (ValueError, TypeError):
+                validation_errors.append(f"{field_label} must be a valid {field_type.__name__}")
+        
+        # Validate categorical fields
+        valid_hvac_types = ['central-ac', 'heat-pump', 'window-ac', 'baseboard', 'other']
+        hvac_type = data.get('hvac_type', 'central-ac').lower()
+        if hvac_type not in valid_hvac_types:
+            validation_errors.append(
+                f"HVAC Type must be one of: {', '.join(valid_hvac_types)}"
+            )
+        
+        valid_seasons = ['winter', 'spring', 'summer', 'fall']
+        season = data.get('season', 'spring').lower()
+        if season not in valid_seasons:
+            validation_errors.append(
+                f"Season must be one of: {', '.join(valid_seasons)}"
+            )
+        
+        # Return validation errors if any
+        if validation_errors:
             return jsonify({
-                'prediction': float(base_pred),
-                'unit': 'kWh',
-                'confidence': 'Medium (demo mode)',
-                'input_data': data,
-                'note': 'Model not loaded; using demo prediction'
-            }), 200
+                'error': 'Validation failed',
+                'details': validation_errors,
+                'received_data': data
+            }), 400
+        
+        # ========== FEATURE ENGINEERING ==========
+        try:
+            features_df = engineer_features(data)
+            print(f"[DEBUG] Engineered {len(features_df.columns)} features")
+            print(f"[DEBUG] Feature columns: {list(features_df.columns)}")
+        except Exception as e:
+            print(f"[ERROR] Feature engineering failed: {str(e)}")
+            return jsonify({
+                'error': 'Feature engineering failed',
+                'details': str(e)
+            }), 500
+        
+        # ========== MODEL PREDICTION ==========
+        if energy_model is None:
+            return jsonify({
+                'error': 'Model not available',
+                'details': 'Energy prediction model is not loaded. Please restart the server.'
+            }), 503
         
         try:
-            prediction = energy_model.predict(features_df)[0]
-        except (AttributeError, TypeError) as e:
-            # Model may not have predict(); try alternative approaches
-            print(f"[WARNING] Model.predict() failed; model type: {type(energy_model)}, error: {e}")
-            base_pred = 200 + (data.get('temperature', 20) * 10) + (data.get('square_footage', 5000) / 100)
+            # Get prediction - features are UNSCALED (raw values)
+            prediction = float(energy_model.predict(features_df)[0])
+            
+            # Basic sanity check
+            if prediction < 0:
+                prediction = abs(prediction)  # Energy can't be negative
+            
+            # Provide confidence level based on prediction
+            if prediction < 300:
+                confidence = 'Low consumption'
+            elif prediction > 900:
+                confidence = 'High consumption'
+            else:
+                confidence = 'Normal consumption'
+            
+            print(f"[SUCCESS] Prediction: {prediction:.2f} kWh (confidence: {confidence})")
+            
             return jsonify({
-                'prediction': float(base_pred),
+                'success': True,
+                'prediction': prediction,
                 'unit': 'kWh',
-                'confidence': 'Low (fallback)',
-                'input_data': data,
-                'note': 'Model inference failed; using formula-based estimate'
+                'confidence': confidence,
+                'input_data': {
+                    'temperature': float(data.get('temperature')),
+                    'humidity': float(data.get('humidity')),
+                    'square_footage': float(data.get('square_footage')),
+                    'month': int(data.get('month')),
+                    'time_of_day': int(data.get('time')),
+                    'hvac_appliances': int(data.get('hvac_appliances'))
+                },
+                'message': f'Predicted monthly energy consumption: {prediction:.0f} kWh'
             }), 200
-        
+            
+        except (AttributeError, TypeError) as e:
+            print(f"[ERROR] Model type/method mismatch: {type(energy_model)}, error: {e}")
+            return jsonify({
+                'error': 'Model inference failed',
+                'details': f'Model does not support predict() method. Type: {type(energy_model).__name__}'
+            }), 500
+        except ValueError as e:
+            print(f"[ERROR] Invalid prediction value: {str(e)}")
+            return jsonify({
+                'error': 'Invalid prediction result',
+                'details': str(e)
+            }), 500
+        except Exception as e:
+            print(f"[ERROR] Unexpected error in prediction: {str(e)}")
+            return jsonify({
+                'error': 'Prediction failed',
+                'details': str(e)
+            }), 500
+            
+    except json.JSONDecodeError as e:
         return jsonify({
-            'prediction': float(prediction),
-            'unit': 'kWh',
-            'confidence': 'High',
-            'input_data': data
-        }), 200
+            'error': 'Invalid JSON',
+            'details': str(e)
+        }), 400
     except Exception as e:
-        print(f"Error in predict_form: {str(e)}")
-        return jsonify({'error': str(e), 'type': type(e).__name__}), 400
+        print(f"[ERROR] Unexpected error in predict_form: {str(e)}")
+        return jsonify({
+            'error': 'Unexpected error',
+            'details': str(e)
+        }), 500
 
 @app.route('/api/predict/file', methods=['POST'])
 @jwt_required()
@@ -266,12 +490,13 @@ def predict_file():
             predictions = []
             for idx, row in df.iterrows():
                 features_df = engineer_features(row.to_dict())
+                
                 try:
                     pred = energy_model.predict(features_df)[0]
                 except (AttributeError, TypeError):
                     # Fallback to formula-based prediction
                     row_dict = row.to_dict()
-                    pred = 200 + (row_dict.get('temperature', 20) * 10) + (row_dict.get('square_footage', 5000) / 100)
+                    pred = 250 + (row_dict.get('temperature', 20) * 2) + (row_dict.get('square_footage', 5000) / 50)
                 predictions.append({
                     'row': idx,
                     'prediction': float(pred),
@@ -900,6 +1125,269 @@ def get_model_info():
         'created_date': '2024-01-01',
         'last_updated': '2024-01-16'
     }), 200
+
+@app.route('/api/energy-tips', methods=['GET', 'OPTIONS'])
+def get_energy_tips():
+    """Get dynamic energy tips"""
+    # Handle CORS preflight
+    if request.method == 'OPTIONS':
+        return '', 200
+    
+    # Verify JWT for GET requests
+    try:
+        verify_jwt_in_request()
+    except:
+        return jsonify({'error': 'Unauthorized'}), 401
+    
+    tips = [
+        {
+            'id': 1,
+            'title': 'Optimize Thermostat Settings',
+            'description': 'Lower your thermostat by 2-3 degrees during winter. Each degree can save 1-3% on energy costs.',
+            'savings': '5-10%',
+            'icon': '🌡️',
+            'category': 'heating'
+        },
+        {
+            'id': 2,
+            'title': 'Use LED Lighting',
+            'description': 'Replace incandescent bulbs with LED bulbs. LEDs use 75% less energy and last 25x longer.',
+            'savings': '10-15%',
+            'icon': '💡',
+            'category': 'lighting'
+        },
+        {
+            'id': 3,
+            'title': 'Seal Air Leaks',
+            'description': 'Caulk and weatherstrip around windows and doors to prevent warm air loss in winter.',
+            'savings': '8-12%',
+            'icon': '🪟',
+            'category': 'insulation'
+        },
+        {
+            'id': 4,
+            'title': 'Run Full Loads Only',
+            'description': 'Operate washing machines and dishwashers only with full loads to maximize energy efficiency.',
+            'savings': '3-8%',
+            'icon': '🔄',
+            'category': 'appliances'
+        },
+        {
+            'id': 5,
+            'title': 'Unplug Devices',
+            'description': 'Unplug devices when not in use or use power strips to eliminate phantom loads.',
+            'savings': '5-10%',
+            'icon': '⚡',
+            'category': 'standby'
+        },
+        {
+            'id': 6,
+            'title': 'Use Natural Light',
+            'description': 'Open curtains during the day to use natural sunlight and reduce artificial lighting needs.',
+            'savings': '5-8%',
+            'icon': '☀️',
+            'category': 'lighting'
+        },
+        {
+            'id': 7,
+            'title': 'Maintain HVAC System',
+            'description': 'Clean or replace HVAC filters monthly to keep your system running efficiently.',
+            'savings': '5-15%',
+            'icon': '🔧',
+            'category': 'hvac'
+        },
+        {
+            'id': 8,
+            'title': 'Adjust Water Heater',
+            'description': 'Lower water heater temperature to 120°F and insulate the tank to reduce heat loss.',
+            'savings': '4-8%',
+            'icon': '💧',
+            'category': 'water'
+        },
+    ]
+    return jsonify(tips), 200
+
+@app.route('/api/user-goals', methods=['GET', 'OPTIONS'])
+def get_user_goals():
+    """Get user's energy goals"""
+    # Handle CORS preflight
+    if request.method == 'OPTIONS':
+        return '', 200
+    
+    # Verify JWT for GET requests
+    try:
+        verify_jwt_in_request()
+    except:
+        return jsonify({'error': 'Unauthorized'}), 401
+    
+    identity = get_jwt_identity()
+    return jsonify({
+        'user_email': identity,
+        'monthly_goal': 15000,
+        'current_usage': 12450,
+        'goal_progress': 83,
+        'remaining_kwh': 2550,
+        'on_track': True,
+        'trend': 'improving'
+    }), 200
+
+@app.route('/api/user-goals', methods=['POST', 'OPTIONS'])
+def update_user_goals():
+    """Update user's energy goals"""
+    # Handle CORS preflight
+    if request.method == 'OPTIONS':
+        return '', 200
+    
+    # Verify JWT for POST requests
+    try:
+        verify_jwt_in_request()
+    except:
+        return jsonify({'error': 'Unauthorized'}), 401
+    
+    identity = get_jwt_identity()
+    data = request.get_json()
+    
+    if not data or 'monthly_goal' not in data:
+        return jsonify({'error': 'Missing monthly_goal'}), 400
+    
+    new_goal = data['monthly_goal']
+    
+    if new_goal < 5000:
+        return jsonify({'error': 'Goal must be at least 5000 kWh'}), 400
+    
+    return jsonify({
+        'message': 'Goal updated successfully',
+        'user_email': identity,
+        'monthly_goal': new_goal,
+        'current_usage': 12450,
+        'goal_progress': (12450 / new_goal) * 100
+    }), 200
+
+@app.route('/api/home-features', methods=['GET'])
+def get_home_features():
+    """Get dynamic features for home page"""
+    features = [
+        {
+            'id': 1,
+            'icon': 'zap',
+            'title': 'Smart Predictions',
+            'description': 'Accurate energy consumption forecasting using advanced ML models with 92% accuracy',
+        },
+        {
+            'id': 2,
+            'icon': 'trending-up',
+            'title': 'Real-time Analytics',
+            'description': 'Monitor your energy usage patterns, trends, and seasonal variations instantly',
+        },
+        {
+            'id': 3,
+            'icon': 'bar-chart',
+            'title': 'Detailed Reports',
+            'description': 'Interactive charts and comprehensive reports for better insights and decisions',
+        },
+        {
+            'id': 4,
+            'icon': 'message-circle',
+            'title': 'AI Chatbot Assistant',
+            'description': 'Get instant answers and personalized predictions via our intelligent chatbot',
+        },
+    ]
+    return jsonify(features), 200
+
+@app.route('/api/home-benefits', methods=['GET'])
+def get_home_benefits():
+    """Get dynamic benefits for home page"""
+    benefits = [
+        {
+            'id': 1,
+            'icon': 'flame',
+            'title': 'Reduce Heating Costs',
+            'description': 'Optimize heating schedules and reduce unnecessary consumption'
+        },
+        {
+            'id': 2,
+            'icon': 'droplet',
+            'title': 'Monitor Usage',
+            'description': 'Track energy consumption by different appliances and systems'
+        },
+        {
+            'id': 3,
+            'icon': 'wind',
+            'title': 'Eco-Friendly',
+            'description': 'Reduce carbon footprint and contribute to environmental sustainability'
+        },
+    ]
+    return jsonify(benefits), 200
+
+@app.route('/api/home-stats', methods=['GET'])
+def get_home_stats():
+    """Get dynamic stats for home page"""
+    stats = {
+        'accuracy': 92,
+        'users': 500,
+        'avg_savings': 30
+    }
+    return jsonify(stats), 200
+
+@app.route('/api/prediction-history', methods=['GET', 'OPTIONS'])
+def get_prediction_history():
+    """Get user's prediction history"""
+    # Handle CORS preflight
+    if request.method == 'OPTIONS':
+        return '', 200
+    
+    # Verify JWT for GET requests
+    try:
+        verify_jwt_in_request()
+    except:
+        return jsonify({'error': 'Unauthorized'}), 401
+    
+    identity = get_jwt_identity()
+    # Generate mock history data
+    history = []
+    for i in range(1, 11):
+        history.append({
+            'id': i,
+            'date': pd.Timestamp.now() - pd.Timedelta(days=i),
+            'prediction': float(np.random.uniform(150, 350)),
+            'parameters': {
+                'temperature': np.random.uniform(5, 35),
+                'humidity': np.random.uniform(20, 80),
+                'square_footage': np.random.uniform(2000, 10000)
+            }
+        })
+    return jsonify(history), 200
+
+@app.route('/api/quick-tips', methods=['GET'])
+def get_quick_tips():
+    """Get quick tips for home page"""
+    tips = [
+        {
+            'id': 1,
+            'title': 'Reduce Thermostat',
+            'description': 'Lower temperature by 2°C can save 5-10% energy',
+            'icon': '🌡️'
+        },
+        {
+            'id': 2,
+            'title': 'Switch to LED',
+            'description': 'LED bulbs use 75% less energy than incandescent',
+            'icon': '💡'
+        },
+        {
+            'id': 3,
+            'title': 'Maintain HVAC',
+            'description': 'Replace filters monthly for optimal efficiency',
+            'icon': '🔧'
+        },
+        {
+            'id': 4,
+            'title': 'Seal Leaks',
+            'description': 'Weatherstrip doors and windows to prevent heat loss',
+            'icon': '🪟'
+        }
+    ]
+    return jsonify(tips), 200
 
 @app.errorhandler(404)
 def not_found(error):
