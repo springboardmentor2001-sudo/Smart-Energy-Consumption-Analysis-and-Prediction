@@ -1,0 +1,47 @@
+# Exclude large model files
+Models/
+# **/*.pkl
+
+# Exclude large dataset files
+# Backend/Dataset/
+# Dataset/
+# **/*.csv
+
+# Exclude other large files
+*.zip
+*.tar.gz
+*.rar
+
+# Exclude development files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+
+# Exclude environment files
+.env
+.env.local
+*.env
+
+# Exclude IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Exclude logs
+*.log
+logs/
+
+# Exclude node_modules (if any)
+node_modules/
+
+# Exclude UI build files (if deploying separately)
+UI/dist/
+UI/build/
