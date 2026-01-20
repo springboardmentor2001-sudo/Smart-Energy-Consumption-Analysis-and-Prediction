@@ -1,0 +1,248 @@
+═══════════════════════════════════════════════════════════════════════════════
+INSTALLATION & SETUP GUIDE FOR ENERGY PREDICTION WEBAPP
+═══════════════════════════════════════════════════════════════════════════════
+
+This guide helps you set up the project correctly to avoid:
+    ❌ "Model does not support predict() method"
+    ❌ "VotingRegressor is not fitted"
+    ❌ ImportError for scikit-learn
+
+═══════════════════════════════════════════════════════════════════════════════
+STEP 1: CHECK YOUR PYTHON VERSION
+═══════════════════════════════════════════════════════════════════════════════
+
+Run:
+    python --version
+
+Expected output:
+    ✅ Python 3.10.x
+    ✅ Python 3.11.x
+    ✅ Python 3.12.x
+
+NOT supported:
+    ❌ Python 3.9 or older
+    ❌ Python 3.14+ (compatibility issues)
+
+If you have wrong version:
+    1. Download Python 3.11 from https://python.org
+    2. Uninstall current Python
+    3. Install Python 3.11
+    4. Continue to Step 2
+
+═══════════════════════════════════════════════════════════════════════════════
+STEP 2: CREATE A VIRTUAL ENVIRONMENT (RECOMMENDED)
+═══════════════════════════════════════════════════════════════════════════════
+
+This isolates dependencies and prevents conflicts.
+
+Navigate to project root:
+    cd "C:\Users\YourUsername\Downloads\pranfinal\Infosys springboard\energy-prediction-webapp"
+
+Create virtual environment:
+    python -m venv venv
+
+Activate it (Windows):
+    venv\Scripts\activate
+
+You should see (venv) in your terminal.
+
+═══════════════════════════════════════════════════════════════════════════════
+STEP 3: INSTALL DEPENDENCIES
+═══════════════════════════════════════════════════════════════════════════════
+
+Navigate to backend folder:
+    cd backend
+
+Install all required packages:
+    pip install -r requirements.txt
+
+This installs:
+    ✅ Flask (web framework)
+    ✅ scikit-learn (machine learning)
+    ✅ xgboost (boosting algorithm)
+    ✅ lightgbm (gradient boosting)
+    ✅ pandas (data handling)
+    ✅ numpy (numerical computing)
+    ✅ joblib (model serialization)
+    + All other dependencies
+
+Wait for installation to complete (2-5 minutes).
+
+═══════════════════════════════════════════════════════════════════════════════
+STEP 4: VERIFY INSTALLATION
+═══════════════════════════════════════════════════════════════════════════════
+
+Run diagnostic script:
+    python diagnose_model.py
+
+You should see:
+    ✅ Python Version: PASS
+    ✅ Dependencies: PASS
+    ✅ Model File: PASS
+    ✅ Model Loading: PASS
+    ✅ Model Prediction: PASS
+    
+    Total: 5/5 checks passed
+
+If any fail, they will show solutions.
+
+═══════════════════════════════════════════════════════════════════════════════
+STEP 5: RUN THE BACKEND SERVER
+═══════════════════════════════════════════════════════════════════════════════
+
+In terminal (backend folder):
+    python app.py
+
+You should see:
+    [OK] Energy model loaded
+    [OK] Feature scaler loaded
+    * Running on http://127.0.0.1:5000
+
+Leave this terminal open.
+
+═══════════════════════════════════════════════════════════════════════════════
+STEP 6: RUN THE FRONTEND (IN NEW TERMINAL)
+═══════════════════════════════════════════════════════════════════════════════
+
+Open new terminal and navigate to frontend:
+    cd frontend
+
+Install Node dependencies:
+    npm install
+
+Start development server:
+    npm run dev
+
+You should see:
+    VITE v4.4.5
+    Local: http://localhost:5173/
+
+Open browser to: http://localhost:5173
+
+═══════════════════════════════════════════════════════════════════════════════
+STEP 7: TEST THE APPLICATION
+═══════════════════════════════════════════════════════════════════════════════
+
+1. Go to http://localhost:5173
+2. Click "Sign Up" or use demo credentials:
+   - Email: demo@example.com
+   - Password: password123
+3. Fill in energy prediction form:
+   - Temperature: 20°C
+   - Humidity: 50%
+   - Square Footage: 5000
+   - Month: 6
+   - Time: 12
+   - HVAC Appliances: 1
+4. Click "Predict"
+5. Should show: ~350 kWh ✅
+
+═══════════════════════════════════════════════════════════════════════════════
+IF YOU GET "Model does not support predict()" ERROR:
+═══════════════════════════════════════════════════════════════════════════════
+
+Try these fixes in order:
+
+FIX 1: Reinstall scikit-learn
+────────────────────────────────
+    pip uninstall scikit-learn -y
+    pip install scikit-learn==1.3.0
+
+FIX 2: Upgrade all packages
+────────────────────────────
+    pip install --upgrade -r requirements.txt
+
+FIX 3: Retrain the model
+────────────────────────
+    del energy_model.pkl
+    del model_performance.pkl
+    python train_improved_model.py
+
+FIX 4: Use fresh virtual environment
+──────────────────────────────────────
+    deactivate
+    rmdir /s /q venv
+    python -m venv venv
+    venv\Scripts\activate
+    pip install -r requirements.txt
+    python train_improved_model.py
+    python app.py
+
+═══════════════════════════════════════════════════════════════════════════════
+TROUBLESHOOTING:
+═══════════════════════════════════════════════════════════════════════════════
+
+Problem: "ModuleNotFoundError: No module named 'scikit-learn'"
+Solution: pip install scikit-learn
+
+Problem: "Port 5000 already in use"
+Solution: 
+    - Close other terminals running app.py
+    - Or change port in app.py (line ~800)
+
+Problem: "CORS error" (frontend can't talk to backend)
+Solution:
+    - Make sure backend is running on port 5000
+    - Make sure frontend is on port 5173
+    - CORS is already configured in app.py
+
+Problem: "Model accuracy is low" (shows 2000+ kWh)
+Solution:
+    - Retrain the model: python train_improved_model.py
+    - Make sure scaling is disabled in training
+    - Check that all 28 features are engineered correctly
+
+Problem: "npm command not found"
+Solution:
+    - Install Node.js from https://nodejs.org
+    - Download LTS version
+    - Restart terminal after installation
+
+═══════════════════════════════════════════════════════════════════════════════
+REQUIREMENTS SUMMARY:
+═══════════════════════════════════════════════════════════════════════════════
+
+Backend Requirements:
+    • Python 3.10, 3.11, or 3.12
+    • pip (Python package manager)
+    • scikit-learn >= 1.3.0 (CRITICAL!)
+    • xgboost >= 2.0.0
+    • lightgbm >= 4.0.0
+    • Flask == 2.3.3
+    • pandas >= 2.0.0
+    • numpy >= 1.24.0
+    • joblib == 1.3.2
+
+Frontend Requirements:
+    • Node.js (LTS version)
+    • npm (comes with Node.js)
+    • React 18.2.0
+    • Vite 4.4.5
+    • TailwindCSS 3.3.3
+
+═══════════════════════════════════════════════════════════════════════════════
+QUICK START (ONE-LINER SUMMARY):
+═══════════════════════════════════════════════════════════════════════════════
+
+1. Check Python version: python --version (need 3.10-3.12)
+2. Install backend: cd backend && pip install -r requirements.txt
+3. Test model: python diagnose_model.py (should show 5/5 PASS)
+4. Run backend: python app.py
+5. (New terminal) Install frontend: cd frontend && npm install
+6. Run frontend: npm run dev
+7. Open browser: http://localhost:5173
+
+═══════════════════════════════════════════════════════════════════════════════
+SUPPORT:
+═══════════════════════════════════════════════════════════════════════════════
+
+If problem persists:
+    1. Run diagnose_model.py and share output
+    2. Check ERROR_MODEL_PREDICT.txt for detailed error info
+    3. Retrain model: python train_improved_model.py
+    4. Restart both frontend and backend
+
+═══════════════════════════════════════════════════════════════════════════════
+Created: January 17, 2026
+Energy Prediction WebApp Installation Guide
+═══════════════════════════════════════════════════════════════════════════════

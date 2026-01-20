@@ -66,3 +66,44 @@ export const modelService = {
   getInfo: () =>
     axios.get(`${API_BASE_URL}/model/info`),
 };
+export const energyTipsService = {
+  getTips: () =>
+    axios.get(`${API_BASE_URL}/energy-tips`, {
+      headers: getAuthHeader(),
+    }),
+};
+
+export const userGoalsService = {
+  getGoals: () =>
+    axios.get(`${API_BASE_URL}/user-goals`, {
+      headers: getAuthHeader(),
+    }),
+  
+  updateGoals: (data) =>
+    axios.post(`${API_BASE_URL}/user-goals`, data, {
+      headers: getAuthHeader(),
+    }),
+};
+
+export const homePageService = {
+  getFeatures: () =>
+    axios.get(`${API_BASE_URL}/home-features`),
+  
+  getBenefits: () =>
+    axios.get(`${API_BASE_URL}/home-benefits`),
+  
+  getStats: () =>
+    axios.get(`${API_BASE_URL}/home-stats`),
+};
+
+export const predictionHistoryService = {
+  getHistory: () =>
+    axios.get(`${API_BASE_URL}/prediction-history`, {
+      headers: getAuthHeader(),
+    }),
+};
+
+export const quickTipsService = {
+  getTips: () =>
+    axios.get(`${API_BASE_URL}/quick-tips`),
+};

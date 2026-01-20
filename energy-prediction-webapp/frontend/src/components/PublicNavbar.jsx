@@ -9,7 +9,7 @@ export const PublicNavbar = () => {
   return (
     <nav className="bg-slate-800 border-b border-slate-700 sticky top-0 z-50 shadow-lg">
       <div className="container flex justify-between items-center h-16">
-        <Link to="/" className="flex items-center gap-2">
+        <Link to="/landing" className="flex items-center gap-2">
           <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center font-bold">
             ⚡
           </div>
@@ -18,7 +18,7 @@ export const PublicNavbar = () => {
 
         <div className="flex items-center gap-6">
           <Link
-            to="/"
+            to="/landing"
             className="hover:text-blue-400 transition-colors text-sm font-medium"
           >
             Home

@@ -1,0 +1,236 @@
+═══════════════════════════════════════════════════════════════════════════════
+ERROR DOCUMENTATION: "Model does not support predict() method"
+═══════════════════════════════════════════════════════════════════════════════
+
+ERROR MESSAGE:
+──────────────
+"Model does not support predict() method"
+or
+"AttributeError: 'VotingRegressor' object has no attribute 'predict'"
+
+═══════════════════════════════════════════════════════════════════════════════
+CAUSE OF THE ERROR:
+═══════════════════════════════════════════════════════════════════════════════
+
+This error occurs when:
+
+1. **Library Version Mismatch** ⚠️
+   - Model was trained/saved with scikit-learn v1.3
+   - But loaded with a different version (e.g., v1.2 or v1.4)
+   - Pickle files are version-specific
+
+2. **Missing Dependencies** ⚠️
+   - xgboost, lightgbm, or catboost not installed
+   - Model components can't be deserialized
+
+3. **Corrupted Model File** ⚠️
+   - energy_model.pkl file is damaged
+   - File transfer error (FTP, download truncated)
+
+4. **Python Version Mismatch** ⚠️
+   - Model trained on Python 3.10
+   - Loaded on Python 3.11 or 3.12
+   - Pickle format incompatibility
+
+═══════════════════════════════════════════════════════════════════════════════
+SOLUTIONS (TRY IN ORDER):
+═══════════════════════════════════════════════════════════════════════════════
+
+SOLUTION 1: UPDATE DEPENDENCIES (MOST COMMON FIX) ✅
+────────────────────────────────────────────────
+
+Step 1: Navigate to backend folder
+    cd backend
+
+Step 2: Install exact versions used for training
+    pip install --upgrade -r requirements.txt
+
+Step 3: Verify installations
+    pip list | findstr scikit-learn
+    pip list | findstr xgboost
+    pip list | findstr lightgbm
+
+Step 4: Restart the server
+    python app.py
+
+───────────────────────────────────────────────────
+
+SOLUTION 2: RETRAIN THE MODEL (RECOMMENDED) ✅
+────────────────────────────────────────────────
+
+This ensures the model is compatible with your system's libraries.
+
+Step 1: Navigate to backend folder
+    cd backend
+
+Step 2: Delete old model files
+    del energy_model.pkl
+    del model_performance.pkl
+    (keep feature_scaler.pkl for now)
+
+Step 3: Retrain the model
+    python train_improved_model.py
+
+Step 4: Wait for completion (takes 2-3 minutes)
+    You'll see:
+    ✓ Ensemble model saved to: energy_model.pkl
+    ✓ Accuracy: 96.15%
+
+Step 5: Restart the server
+    python app.py
+
+───────────────────────────────────────────────────
+
+SOLUTION 3: CHECK PYTHON VERSION ⚠️
+────────────────────────────────────
+
+Step 1: Check your Python version
+    python --version
+
+Required: Python 3.10 or 3.11
+    ✅ Supported: 3.10.x, 3.11.x
+    ❌ Not supported: 3.9.x, 3.14.x
+
+Step 2: If wrong version, install correct one:
+    - Download Python 3.11 from python.org
+    - Reinstall requirements: pip install -r requirements.txt
+    - Retrain model: python train_improved_model.py
+
+───────────────────────────────────────────────────
+
+SOLUTION 4: VERIFY REQUIREMENTS.TXT ⚠️
+────────────────────────────────────────
+
+Ensure your requirements.txt has EXACT versions:
+
+    Flask==2.3.3
+    Flask-CORS==4.0.0
+    Flask-JWT-Extended==4.5.2
+    python-dotenv==1.0.0
+    joblib==1.3.2
+    numpy>=1.24.0
+    pandas>=2.0.0
+    scikit-learn>=1.3.0
+    xgboost>=2.0.0
+    lightgbm>=4.0.0
+    requests==2.31.0
+    Werkzeug==2.3.7
+
+If different, update and reinstall:
+    pip install --upgrade -r requirements.txt
+    python train_improved_model.py
+
+═══════════════════════════════════════════════════════════════════════════════
+QUICK FIX CHECKLIST:
+═══════════════════════════════════════════════════════════════════════════════
+
+☐ Step 1: Update all requirements
+    pip install --upgrade -r requirements.txt
+
+☐ Step 2: Delete old model files
+    del energy_model.pkl
+
+☐ Step 3: Retrain the model
+    python train_improved_model.py
+
+☐ Step 4: Restart Flask server
+    python app.py
+
+☐ Step 5: Test prediction (should show 300-700 kWh)
+
+═══════════════════════════════════════════════════════════════════════════════
+PREVENT THIS ERROR IN THE FUTURE:
+═══════════════════════════════════════════════════════════════════════════════
+
+1. **Always use requirements.txt**
+   - Use: pip install -r requirements.txt
+   - Don't use: pip install scikit-learn (can install wrong version)
+
+2. **Document your environment**
+   - Python version: python --version
+   - Pip version: pip --version
+   - Keep requirements.txt updated
+
+3. **Share model with code**
+   - Don't send just energy_model.pkl
+   - Share: train_improved_model.py + requirements.txt
+   - Receiver can retrain on their system
+
+4. **Use virtual environments**
+   - Isolates dependencies
+   - Prevents version conflicts
+   
+   Create:
+       python -m venv venv
+       
+   Activate (Windows):
+       venv\Scripts\activate
+       
+   Install:
+       pip install -r requirements.txt
+       
+   Deactivate:
+       deactivate
+
+═══════════════════════════════════════════════════════════════════════════════
+IF ERROR PERSISTS:
+═══════════════════════════════════════════════════════════════════════════════
+
+1. Check error logs:
+   - Look at server terminal output
+   - Note exact error message
+   - Check line number where error occurs
+
+2. Test model directly:
+   python -c "
+   import joblib
+   model = joblib.load('energy_model.pkl')
+   print(type(model))
+   print(dir(model))
+   "
+
+3. Verify file integrity:
+   - Check energy_model.pkl file size (should be > 50MB)
+   - Ensure no file corruption during transfer
+
+4. Contact support with:
+   - Full error message
+   - Python version: python --version
+   - Pip list output: pip list
+   - Operating system (Windows/Mac/Linux)
+
+═══════════════════════════════════════════════════════════════════════════════
+SUPPORT INFORMATION:
+═══════════════════════════════════════════════════════════════════════════════
+
+Model Info:
+    - Type: Ensemble (VotingRegressor)
+    - Components: XGBoost, LightGBM, Random Forest
+    - Training Data: 5000 synthetic samples
+    - Features: 28 engineered features
+    - Accuracy: 96.15%
+    - Output Range: 300-700 kWh
+
+Files Required:
+    ✅ energy_model.pkl (generated after training)
+    ✅ train_improved_model.py (to retrain if needed)
+    ✅ requirements.txt (dependencies)
+    ✅ app.py (Flask server)
+
+═══════════════════════════════════════════════════════════════════════════════
+MOST LIKELY SOLUTION: Run these 3 commands:
+═══════════════════════════════════════════════════════════════════════════════
+
+1. Update dependencies:
+    pip install --upgrade -r requirements.txt
+
+2. Retrain the model:
+    python train_improved_model.py
+
+3. Start the server:
+    python app.py
+
+═══════════════════════════════════════════════════════════════════════════════
+Created: January 17, 2026
+Energy Prediction WebApp - Error Documentation
+═══════════════════════════════════════════════════════════════════════════════
