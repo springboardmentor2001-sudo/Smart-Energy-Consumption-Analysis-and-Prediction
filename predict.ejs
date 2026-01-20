@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Energy Prediction | EnergyPredict</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+            color: #fff;
+            min-height: 100vh;
+        }
+
+        header {
+            padding: 20px 50px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        header h1 {
+            font-size: 1.6rem;
+            font-weight: 600;
+        }
+
+        nav a {
+            color: #fff;
+            text-decoration: none;
+            margin-left: 25px;
+            transition: 0.3s;
+        }
+
+        nav a:hover {
+            color: #00e6e6;
+        }
+
+        .container {
+            max-width: 950px;
+            margin: 50px auto;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 45px;
+            border-radius: 18px;
+        }
+
+        h2 {
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.2rem;
+        }
+
+        form {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 22px;
+        }
+
+        label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 11px;
+            border-radius: 8px;
+            border: none;
+            outline: none;
+            font-size: 0.95rem;
+        }
+
+        .full {
+            grid-column: span 2;
+        }
+
+        button {
+            grid-column: span 2;
+            margin-top: 10px;
+            padding: 14px;
+            background: #00e6e6;
+            color: #000;
+            border: none;
+            border-radius: 30px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        button:hover {
+            background: #00bfbf;
+        }
+
+        .result {
+            margin-top: 35px;
+            padding: 25px;
+            text-align: center;
+            background: rgba(0, 0, 0, 0.25);
+            border-radius: 14px;
+            color: #00ffcc;
+        }
+
+        .result h3 {
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 30px;
+            opacity: 0.7;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>⚡ EnergyPredict</h1>
+    <nav>
+       <a href="/">Home</a>
+        <a href="/about">About</a>
+        <a href="/predict">Predict</a>
+        <a href="/history">History</a>
+        <a href="/analytics">Analytics</a>
+        <a href="/chatbot">Chatbot</a>
+        <a href="/review">Review</a>
+    </nav>
+</header>
+
+<div class="container">
+    <h2>Energy Consumption Prediction</h2>
+
+    <form action="/predict" method="POST">
+
+        <!-- Core Features -->
+        <div>
+            <label>Temperature (°C)</label>
+            <input type="number" step="0.1" name="Temperature" required>
+        </div>
+
+        <div>
+            <label>Humidity (%)</label>
+            <input type="number" step="0.1" name="Humidity" required>
+        </div>
+
+        <div>
+            <label>Square Footage</label>
+            <input type="number" name="SquareFootage" required>
+        </div>
+
+        <div>
+            <label>Occupancy</label>
+            <input type="number" name="Occupancy" required>
+        </div>
+
+        <!-- Usage -->
+        <div>
+            <label>HVAC Usage</label>
+            <select name="HVACUsage" required>
+                <option value="On">On</option>
+                <option value="Off">Off</option>
+            </select>
+        </div>
+
+        <div>
+            <label>Lighting Usage</label>
+            <select name="LightingUsage" required>
+                <option value="On">On</option>
+                <option value="Off">Off</option>
+            </select>
+        </div>
+
+        <!-- Time Features -->
+        <div>
+            <label>Day (1–31)</label>
+            <input type="number" name="Day" min="1" max="31" required>
+        </div>
+
+        <div>
+            <label>Day of Week (1 = Mon, 7 = Sun)</label>
+            <input type="number" name="DayOfWeek" min="1" max="7" required>
+        </div>
+
+        <div>
+            <label>Month</label>
+            <input type="number" name="Month" min="1" max="12" required>
+        </div>
+
+        <div>
+            <label>Hour (0–23)</label>
+            <input type="number" name="Hour" min="0" max="23" required>
+        </div>
+
+        <!-- Additional -->
+        <div>
+            <label>Renewable Energy Available?</label>
+            <select name="RenewableEnergy" required>
+                <option value="0">No</option>
+                <option value="1">Yes</option>
+            </select>
+        </div>
+
+        <div>
+            <label>Holiday?</label>
+            <select name="Holiday" required>
+                <option value="0">No</option>
+                <option value="1">Yes</option>
+            </select>
+        </div>
+
+        <button type="submit">Predict Energy Consumption</button>
+    </form>
+
+    <% if (typeof prediction !== "undefined") { %>
+        <div class="result">
+            <h3>Predicted Energy Consumption</h3>
+            <p><strong><%= prediction %></strong></p>
+        </div>
+    <% } %>
+</div>
+
+<footer>
+    © <%= new Date().getFullYear() %> EnergyPredict | ML-Powered Insights
+</footer>
+
+</body>
+</html>
