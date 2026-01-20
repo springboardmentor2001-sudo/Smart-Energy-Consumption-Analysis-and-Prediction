@@ -111,37 +111,3 @@ Browser Developer Tools
 
 Postman/curl (API Testing)
 
-📁 Project Structure
-text
-smartenergy-ai/
-│
-├── app.py                          # Main Flask application
-├── smart_energy.pkl                # Trained ML model (if available)
-├── predictions.json                # Prediction history storage
-│
-├── static/                         # Static assets
-│   ├── css/
-│   │   └── styles.css              # Additional styles
-│   ├── js/
-│   │   └── scripts.js              # Additional scripts
-│   └── images/                     # Image assets
-│
-├── templates/                      # HTML templates
-│   └── index.html                  # Main HTML file
-│
-├── docs/                           # Documentation
-│   ├── API.md                      # API documentation
-│   ├── SETUP.md                    # Setup guide
-│   └── USER_GUIDE.md               # User manual
-│
-├── data/                           # Sample data files
-│   ├── sample_energy.csv
-│   ├── sample_energy.json
-│   └── sample_energy.txt
-│
-├── notebooks/                      # Jupyter notebooks
-│   └── model_training.ipynb        # Model training notebook
-│
-├── requirements.txt                # Python dependencies
-├── README.md                       # Project README
-└── .gitignore                      # Git ignore file
