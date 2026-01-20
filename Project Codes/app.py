@@ -31,6 +31,15 @@ import pandas as pd
 import json
 from datetime import datetime, timedelta
 
+# MongoDB imports
+try:
+    from pymongo import MongoClient
+    from pymongo.errors import ConnectionFailure, OperationFailure
+    MONGODB_AVAILABLE = True
+except ImportError:
+    MONGODB_AVAILABLE = False
+    print("⚠️ pymongo not installed - using JSON fallback")
+
 # File processing libraries
 try:
     import PyPDF2
@@ -62,14 +71,6 @@ except ImportError:
     GEMINI_AVAILABLE = False
     print("⚠️ google-generativeai not installed")
 
-# ==================== POSTGRESQL DATABASE CONFIGURATION ====================
-try:
-    from flask_sqlalchemy import SQLAlchemy
-    SQLALCHEMY_AVAILABLE = True
-except ImportError:
-    SQLALCHEMY_AVAILABLE = False
-    print("⚠️ Flask-SQLAlchemy not installed - using JSON fallback")
-
 load_dotenv()
 
 # Email Configuration
@@ -92,91 +93,45 @@ app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
 
-# ==================== DATABASE CONFIGURATION ====================
-# PostgreSQL configuration with fallback to JSON
-DATABASE_URL = os.getenv('DATABASE_URL')
-USE_POSTGRESQL = False
+# ==================== MONGODB CONFIGURATION ====================
+MONGODB_URI = os.getenv('MONGODB_URI')
+USE_MONGODB = False
+mongo_client = None
 db = None
 
-if SQLALCHEMY_AVAILABLE and DATABASE_URL:
+if MONGODB_AVAILABLE and MONGODB_URI:
     try:
-        app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL
-        app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-        app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
-            'pool_size': 10,
-            'pool_recycle': 3600,
-            'pool_pre_ping': True,
-        }
-        db = SQLAlchemy(app)
-        USE_POSTGRESQL = True
-        print("✅ PostgreSQL configured")
+        mongo_client = MongoClient(MONGODB_URI, serverSelectionTimeoutMS=5000)
+        # Test connection
+        mongo_client.admin.command('ping')
+        
+        db = mongo_client['smart_energy_db']
+        
+        # Create collections
+        users_collection = db['users']
+        predictions_collection = db['predictions']
+        reviews_collection = db['reviews']
+        
+        # Create indexes
+        users_collection.create_index('email', unique=True)
+        predictions_collection.create_index([('user_email', 1), ('timestamp', -1)])
+        reviews_collection.create_index('timestamp')
+        
+        USE_MONGODB = True
+        print("✅ MongoDB Atlas connected successfully")
     except Exception as e:
-        print(f"⚠️ PostgreSQL configuration error: {e}")
-        USE_POSTGRESQL = False
+        print(f"⚠️ MongoDB connection error: {e}")
+        USE_MONGODB = False
+        mongo_client = None
+        db = None
 else:
-    print("⚠️ PostgreSQL not available - using JSON fallback")
-    USE_POSTGRESQL = False
+    print("⚠️ MongoDB not available - using JSON fallback")
 
 # JSON fallback paths
 JSON_DB_DIR = 'data'
 USERS_FILE = os.path.join(JSON_DB_DIR, 'users.json')
 PREDICTIONS_FILE = os.path.join(JSON_DB_DIR, 'predictions_history.json')
 REVIEWS_FILE = os.path.join(JSON_DB_DIR, 'reviews.json')
-
-# ==================== DATABASE MODELS (PostgreSQL) ====================
-if USE_POSTGRESQL and db:
-    class User(db.Model):
-        __tablename__ = 'users'
-        
-        id = db.Column(db.Integer, primary_key=True)
-        email = db.Column(db.String(120), unique=True, nullable=False, index=True)
-        name = db.Column(db.String(120), nullable=False)
-        password_hash = db.Column(db.String(255), nullable=False)
-        created_at = db.Column(db.DateTime, default=datetime.utcnow)
-        
-        predictions = db.relationship('Prediction', backref='user', lazy=True, cascade='all, delete-orphan')
-        
-        def __repr__(self):
-            return f'<User {self.email}>'
-    
-    class Prediction(db.Model):
-        __tablename__ = 'predictions'
-        
-        id = db.Column(db.Integer, primary_key=True)
-        user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-        timestamp = db.Column(db.DateTime, default=datetime.utcnow)
-        prediction = db.Column(db.Float, nullable=False)
-        usage_level = db.Column(db.String(20), nullable=False)
-        efficiency_score = db.Column(db.Float, nullable=False)
-        temperature = db.Column(db.Float)
-        occupancy = db.Column(db.Integer)
-        hvac = db.Column(db.Float)
-        date = db.Column(db.String(50))
-        
-        def __repr__(self):
-            return f'<Prediction {self.id}>'
-    
-    class Review(db.Model):
-        __tablename__ = 'reviews'
-        
-        id = db.Column(db.Integer, primary_key=True)
-        user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-        user_email = db.Column(db.String(120), nullable=False)
-        user_name = db.Column(db.String(120), nullable=False)
-        rating = db.Column(db.Integer, nullable=False)
-        comment = db.Column(db.Text)
-        timestamp = db.Column(db.DateTime, default=datetime.utcnow)
-        
-        def __repr__(self):
-            return f'<Review {self.id}>'
-    
-    # Create tables on app context
-    with app.app_context():
-        try:
-            db.create_all()
-            print("✅ Database tables created/verified")
-        except Exception as e:
-            print(f"⚠️ Error creating tables: {e}")
 
 # ==================== DATABASE INITIALIZATION (JSON Fallback) ====================
 def init_json_databases():
@@ -201,72 +156,6 @@ def init_json_databases():
 
 if CORS_AVAILABLE:
     CORS(app)
-
-# ==================== EMAIL FUNCTION ====================
-def send_email_with_report(user_email, user_name, pdf_buffer):
-    """Send email with PDF report attached"""
-    try:
-        msg = MIMEMultipart()
-        msg['From'] = EMAIL_SENDER
-        msg['To'] = user_email
-        msg['Subject'] = 'Your Smart Energy AI - Prediction Report'
-        
-        body = f"""
-        <html>
-            <body style="font-family: Arial, sans-serif; line-height: 1.6;">
-                <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
-                    <h2 style="color: #00f0ff;">Smart Energy AI - Prediction Report</h2>
-                    
-                    <p>Hello {user_name},</p>
-                    
-                    <p>Thank you for using Smart Energy AI Platform!</p>
-                    
-                    <p>Please find attached your comprehensive energy prediction report. 
-                    This report includes:</p>
-                    
-                    <ul>
-                        <li>Summary statistics of your energy consumption</li>
-                        <li>Recent prediction history</li>
-                        <li>Usage patterns and efficiency metrics</li>
-                    </ul>
-                    
-                    <p>Keep monitoring your energy consumption to optimize efficiency!</p>
-                    
-                    <p style="margin-top: 30px;">
-                        <strong>Best regards,</strong><br/>
-                        Smart Energy AI Team
-                    </p>
-                    
-                    <hr style="margin-top: 30px; border: none; border-top: 1px solid #ddd;">
-                    
-                    <p style="font-size: 12px; color: #666;">
-                        This is an automated message. Please do not reply to this email.
-                    </p>
-                </div>
-            </body>
-        </html>
-        """
-        
-        msg.attach(MIMEText(body, 'html'))
-        
-        pdf_buffer.seek(0)
-        attachment = MIMEBase('application', 'pdf')
-        attachment.set_payload(pdf_buffer.read())
-        encoders.encode_base64(attachment)
-        attachment.add_header('Content-Disposition', 
-                            f'attachment; filename=energy_report_{datetime.now().strftime("%Y%m%d")}.pdf')
-        msg.attach(attachment)
-        
-        server = smtplib.SMTP(SMTP_SERVER, SMTP_PORT)
-        server.starttls()
-        server.login(EMAIL_SENDER, EMAIL_PASSWORD)
-        server.send_message(msg)
-        server.quit()
-        
-        return True
-    except Exception as e:
-        print(f"Email error: {e}")
-        return False
 
 # ==================== AI CONFIGURATION ====================
 GROQ_API_KEY = os.getenv('GROQ_API_KEY')
@@ -341,20 +230,19 @@ except Exception as e:
 # ==================== USER MANAGEMENT FUNCTIONS ====================
 
 def load_users():
-    """Load users from PostgreSQL or JSON fallback"""
-    if USE_POSTGRESQL and db:
+    """Load users from MongoDB or JSON fallback"""
+    if USE_MONGODB and db is not None:
         try:
-            users = User.query.all()
             users_dict = {}
-            for user in users:
-                users_dict[user.email] = {
-                    'name': user.name,
-                    'password': user.password_hash,
-                    'created_at': user.created_at.isoformat() if user.created_at else ''
+            for user in db.users.find():
+                users_dict[user['email']] = {
+                    'name': user['name'],
+                    'password': user['password_hash'],
+                    'created_at': user.get('created_at', '')
                 }
             return users_dict
         except Exception as e:
-            print(f"⚠️ Error loading users from PostgreSQL: {e}")
+            print(f"⚠️ Error loading users from MongoDB: {e}")
             return {}
     else:
         # JSON fallback
@@ -369,22 +257,24 @@ def load_users():
         return {}
 
 def save_users(users):
-    """Save users to PostgreSQL or JSON fallback"""
-    if USE_POSTGRESQL and db:
+    """Save users to MongoDB or JSON fallback"""
+    if USE_MONGODB and db is not None:
         try:
             for email, data in users.items():
-                user = User.query.filter_by(email=email).first()
-                if not user:
-                    user = User(
-                        email=email,
-                        name=data.get('name', 'Unknown'),
-                        password_hash=data.get('password', '')
-                    )
-                    db.session.add(user)
-            db.session.commit()
+                db.users.update_one(
+                    {'email': email},
+                    {
+                        '$set': {
+                            'email': email,
+                            'name': data.get('name', 'Unknown'),
+                            'password_hash': data.get('password', ''),
+                            'created_at': data.get('created_at', datetime.now().isoformat())
+                        }
+                    },
+                    upsert=True
+                )
         except Exception as e:
-            db.session.rollback()
-            print(f"❌ Error saving users to PostgreSQL: {e}")
+            print(f"❌ Error saving users to MongoDB: {e}")
     else:
         # JSON fallback
         try:
@@ -399,21 +289,19 @@ def register_user(email, name, password):
     """Register a new user"""
     email = email.lower().strip()
     
-    if USE_POSTGRESQL and db:
+    if USE_MONGODB and db is not None:
         try:
-            if User.query.filter_by(email=email).first():
+            if db.users.find_one({'email': email}):
                 return False, "User already exists"
             
-            user = User(
-                email=email,
-                name=name,
-                password_hash=generate_password_hash(password)
-            )
-            db.session.add(user)
-            db.session.commit()
+            db.users.insert_one({
+                'email': email,
+                'name': name,
+                'password_hash': generate_password_hash(password),
+                'created_at': datetime.now().isoformat()
+            })
             return True, "User registered successfully"
         except Exception as e:
-            db.session.rollback()
             return False, f"Error: {e}"
     else:
         # JSON fallback
@@ -433,16 +321,16 @@ def login_user(email, password):
     """Verify user credentials"""
     email = email.lower().strip()
     
-    if USE_POSTGRESQL and db:
+    if USE_MONGODB and db is not None:
         try:
-            user = User.query.filter_by(email=email).first()
+            user = db.users.find_one({'email': email})
             if not user:
                 return False, "User not found"
             
-            if not check_password_hash(user.password_hash, password):
+            if not check_password_hash(user['password_hash'], password):
                 return False, "Invalid password"
             
-            return True, user.name
+            return True, user['name']
         except Exception as e:
             return False, f"Error: {e}"
     else:
@@ -459,32 +347,29 @@ def login_user(email, password):
 # ==================== PREDICTION FUNCTIONS ====================
 
 def load_predictions_history():
-    """Load prediction history from PostgreSQL or JSON"""
-    if USE_POSTGRESQL and db:
+    """Load prediction history from MongoDB or JSON"""
+    if USE_MONGODB and db is not None:
         try:
-            predictions = Prediction.query.all()
             history = {}
-            
-            for pred in predictions:
-                user = User.query.get(pred.user_id)
-                if user:
-                    if user.email not in history:
-                        history[user.email] = []
-                    
-                    history[user.email].append({
-                        'timestamp': pred.timestamp.isoformat() if pred.timestamp else '',
-                        'prediction': pred.prediction,
-                        'usage_level': pred.usage_level,
-                        'efficiency_score': pred.efficiency_score,
-                        'temperature': pred.temperature,
-                        'occupancy': pred.occupancy,
-                        'hvac': pred.hvac,
-                        'date': pred.date
-                    })
+            for pred in db.predictions.find():
+                user_email = pred['user_email']
+                if user_email not in history:
+                    history[user_email] = []
+                
+                history[user_email].append({
+                    'timestamp': pred.get('timestamp', ''),
+                    'prediction': pred['prediction'],
+                    'usage_level': pred['usage_level'],
+                    'efficiency_score': pred['efficiency_score'],
+                    'temperature': pred.get('temperature'),
+                    'occupancy': pred.get('occupancy'),
+                    'hvac': pred.get('hvac'),
+                    'date': pred['date']
+                })
             
             return history
         except Exception as e:
-            print(f"⚠️ Error loading predictions from PostgreSQL: {e}")
+            print(f"⚠️ Error loading predictions from MongoDB: {e}")
             return {}
     else:
         # JSON fallback
@@ -502,29 +387,21 @@ def save_prediction(user_email, prediction_data):
     """Save a prediction to database"""
     user_email = user_email.lower().strip()
     
-    if USE_POSTGRESQL and db:
+    if USE_MONGODB and db is not None:
         try:
-            user = User.query.filter_by(email=user_email).first()
-            if not user:
-                print(f"❌ User not found: {user_email}")
-                return False
-            
-            prediction = Prediction(
-                user_id=user.id,
-                prediction=prediction_data['prediction'],
-                usage_level=prediction_data['usage_level'],
-                efficiency_score=prediction_data['efficiency_score'],
-                temperature=prediction_data.get('temperature'),
-                occupancy=prediction_data.get('occupancy'),
-                hvac=prediction_data.get('hvac'),
-                date=datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-            )
-            
-            db.session.add(prediction)
-            db.session.commit()
+            db.predictions.insert_one({
+                'user_email': user_email,
+                'timestamp': datetime.now().isoformat(),
+                'prediction': prediction_data['prediction'],
+                'usage_level': prediction_data['usage_level'],
+                'efficiency_score': prediction_data['efficiency_score'],
+                'temperature': prediction_data.get('temperature'),
+                'occupancy': prediction_data.get('occupancy'),
+                'hvac': prediction_data.get('hvac'),
+                'date': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            })
             return True
         except Exception as e:
-            db.session.rollback()
             print(f"❌ Error saving prediction: {e}")
             return False
     else:
@@ -563,26 +440,22 @@ def get_user_predictions(user_email):
     """Get predictions for a specific user"""
     user_email = user_email.lower().strip()
     
-    if USE_POSTGRESQL and db:
+    if USE_MONGODB and db is not None:
         try:
-            user = User.query.filter_by(email=user_email).first()
-            if not user:
-                return []
-            
-            predictions = Prediction.query.filter_by(user_id=user.id).order_by(
-                Prediction.timestamp.desc()
-            ).limit(50).all()
+            predictions = list(db.predictions.find(
+                {'user_email': user_email}
+            ).sort('timestamp', -1).limit(50))
             
             return [
                 {
-                    'timestamp': p.timestamp.isoformat() if p.timestamp else '',
-                    'prediction': p.prediction,
-                    'usage_level': p.usage_level,
-                    'efficiency_score': p.efficiency_score,
-                    'temperature': p.temperature,
-                    'occupancy': p.occupancy,
-                    'hvac': p.hvac,
-                    'date': p.date
+                    'timestamp': p.get('timestamp', ''),
+                    'prediction': p['prediction'],
+                    'usage_level': p['usage_level'],
+                    'efficiency_score': p['efficiency_score'],
+                    'temperature': p.get('temperature'),
+                    'occupancy': p.get('occupancy'),
+                    'hvac': p.get('hvac'),
+                    'date': p['date']
                 }
                 for p in predictions
             ]
@@ -597,17 +470,17 @@ def get_user_predictions(user_email):
 # ==================== REVIEW FUNCTIONS ====================
 
 def load_reviews():
-    """Load all reviews from PostgreSQL or JSON"""
-    if USE_POSTGRESQL and db:
+    """Load all reviews from MongoDB or JSON"""
+    if USE_MONGODB and db is not None:
         try:
-            reviews = Review.query.all()
+            reviews = list(db.reviews.find().sort('timestamp', -1))
             return [
                 {
-                    'user_email': r.user_email,
-                    'user_name': r.user_name,
-                    'rating': r.rating,
-                    'comment': r.comment,
-                    'timestamp': r.timestamp.strftime('%Y-%m-%d %H:%M:%S') if r.timestamp else ''
+                    'user_email': r['user_email'],
+                    'user_name': r['user_name'],
+                    'rating': r['rating'],
+                    'comment': r['comment'],
+                    'timestamp': r.get('timestamp', '')
                 }
                 for r in reviews
             ]
@@ -630,25 +503,17 @@ def add_review(user_email, user_name, rating, comment):
     """Add a new review"""
     user_email = user_email.lower().strip()
     
-    if USE_POSTGRESQL and db:
+    if USE_MONGODB and db is not None:
         try:
-            user = User.query.filter_by(email=user_email).first()
-            if not user:
-                return False
-            
-            review = Review(
-                user_id=user.id,
-                user_email=user_email,
-                user_name=user_name,
-                rating=rating,
-                comment=comment
-            )
-            
-            db.session.add(review)
-            db.session.commit()
+            db.reviews.insert_one({
+                'user_email': user_email,
+                'user_name': user_name,
+                'rating': rating,
+                'comment': comment,
+                'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            })
             return True
         except Exception as e:
-            db.session.rollback()
             print(f"❌ Error adding review: {e}")
             return False
     else:
@@ -673,6 +538,88 @@ def add_review(user_email, user_name, rating, comment):
         except Exception as e:
             print(f"❌ Error adding review to JSON: {e}")
             return False
+
+# ==================== EMAIL FUNCTION ====================
+def send_email_with_report(user_email, user_name, pdf_buffer):
+    """Send email with PDF report attached"""
+    try:
+        msg = MIMEMultipart()
+        msg['From'] = EMAIL_SENDER
+        msg['To'] = user_email
+        msg['Subject'] = 'Your Smart Energy AI - Prediction Report'
+        
+        body = f"""
+        <html>
+            <body style="font-family: Arial, sans-serif; line-height: 1.6;">
+                <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+                    <h2 style="color: #00f0ff;">Smart Energy AI - Prediction Report</h2>
+                    
+                    <p>Hello {user_name},</p>
+                    
+                    <p>Thank you for using Smart Energy AI Platform!</p>
+                    
+                    <p>Please find attached your comprehensive energy prediction report. 
+                    This report includes:</p>
+                    
+                    <ul>
+                        <li>Summary statistics of your energy consumption</li>
+                        <li>Recent prediction history</li>
+                        <li>Usage patterns and efficiency metrics</li>
+                    </ul>
+                    
+                    <p>Keep monitoring your energy consumption to optimize efficiency!</p>
+                    
+                    <p style="margin-top: 30px;">
+                        <strong>Best regards,</strong><br/>
+                        Smart Energy AI Team
+                    </p>
+                    
+                    <hr style="margin-top: 30px; border: none; border-top: 1px solid #ddd;">
+                    
+                    <p style="font-size: 12px; color: #666;">
+                        This is an automated message. Please do not reply to this email.
+                    </p>
+                </div>
+            </body>
+        </html>
+        """
+        
+        msg.attach(MIMEText(body, 'html'))
+        
+        pdf_buffer.seek(0)
+        attachment = MIMEBase('application', 'pdf')
+        attachment.set_payload(pdf_buffer.read())
+        encoders.encode_base64(attachment)
+        attachment.add_header('Content-Disposition', 
+                            f'attachment; filename=energy_report_{datetime.now().strftime("%Y%m%d")}.pdf')
+        msg.attach(attachment)
+        
+        print(f"📧 Connecting to SMTP server {SMTP_SERVER}:{SMTP_PORT}...")
+        server = smtplib.SMTP(SMTP_SERVER, SMTP_PORT)
+        server.starttls()
+        
+        print(f"📧 Logging in as {EMAIL_SENDER}...")
+        server.login(EMAIL_SENDER, EMAIL_PASSWORD)
+        
+        print(f"📧 Sending email to {user_email}...")
+        server.send_message(msg)
+        server.quit()
+        
+        print(f"✅ Email sent successfully to {user_email}")
+        return True
+    
+    except smtplib.SMTPAuthenticationError as e:
+        print(f"❌ Email authentication failed: {e}")
+        print("   Check that EMAIL_SENDER and EMAIL_PASSWORD are correct")
+        return False
+    except smtplib.SMTPException as e:
+        print(f"❌ SMTP error: {e}")
+        return False
+    except Exception as e:
+        print(f"❌ Email error: {e}")
+        import traceback
+        traceback.print_exc()
+        return False
 
 # ==================== AUTHENTICATION DECORATOR ====================
 
@@ -1124,6 +1071,80 @@ def generate_pdf_report(user_email):
     buffer.seek(0)
     return buffer
 
+# ==================== FEATURE ENGINEERING ====================
+
+def create_features(input_data):
+    timestamp = datetime.strptime(input_data['timestamp'], '%Y-%m-%dT%H:%M')
+    hour = timestamp.hour
+    
+    temperature = input_data['Temperature']
+    humidity = input_data['Humidity']
+    occupancy = input_data['Occupancy']
+    hvac_usage = 1 if input_data['HVACUsage'] == 'On' else 0
+    lighting_usage = 1 if input_data['LightingUsage'] == 'On' else 0
+    
+    thermal_energy_load = temperature * hvac_usage * 1.5
+    occupancy_energy_load = occupancy * 3.0
+    environmental_stress_level = (temperature * humidity) / 100.0
+    high_temp_regime = 1 if temperature > 25 else 0
+    high_occupancy_regime = 1 if occupancy >= 5 else 0
+    is_peak_hour = 1 if 18 <= hour <= 22 else 0
+    hvac_on_peak = hvac_usage * is_peak_hour
+    
+    temp_bucket = 0 if temperature < 20 else (1 if temperature < 25 else 2)
+    
+    recent_consumption_level = 50 + (temperature - 20) * 1.5 + occupancy * 3
+    load_consistency = 0.8
+    daily_usage_sin = np.sin(2 * np.pi * hour / 24)
+    daily_usage_cos = np.cos(2 * np.pi * hour / 24)
+    load_change_1h = 0.0
+    hvac_stress = hvac_usage * (abs(temperature - 22) / 10.0)
+    lighting_demand_intensity = lighting_usage * occupancy * 0.5
+    short_term_trend = 0.0
+    
+    features = pd.DataFrame([{
+        'Temperature': temperature,
+        'Humidity': humidity,
+        'Occupancy': occupancy,
+        'HVACUsage': hvac_usage,
+        'LightingUsage': lighting_usage,
+        'Thermal_Energy_Load': thermal_energy_load,
+        'Occupancy_Energy_Load': occupancy_energy_load,
+        'Environmental_Stress_Level': environmental_stress_level,
+        'High_Temp_Regime': high_temp_regime,
+        'High_Occupancy_Regime': high_occupancy_regime,
+        'HVAC_On_Peak': hvac_on_peak,
+        'Temp_Bucket': temp_bucket,
+        'Recent_Consumption_Level': recent_consumption_level,
+        'Load_Consistency': load_consistency,
+        'Daily_Usage_Sin': daily_usage_sin,
+        'Daily_Usage_Cos': daily_usage_cos,
+        'Load_Change_1H': load_change_1h,
+        'HVAC_Stress': hvac_stress,
+        'Lighting_Demand_Intensity': lighting_demand_intensity,
+        'Is_Peak_Hour': is_peak_hour,
+        'Short_Term_Trend': short_term_trend
+    }])
+    
+    return features
+
+def fallback_prediction(data):
+    base = 50.0
+    temp_factor = (data['Temperature'] - 20) * 1.5
+    occupancy_factor = data['Occupancy'] * 3
+    sqft_factor = data['SquareFootage'] / 50
+    hvac_factor = 20 if data['HVACUsage'] == 'On' else 0
+    lighting_factor = 10 if data['LightingUsage'] == 'On' else 0
+    renewable_offset = data['RenewableEnergy'] * -0.5
+    holiday_factor = -5 if data['Holiday'] == 'Yes' else 0
+    
+    prediction = base + temp_factor + occupancy_factor + sqft_factor + hvac_factor + lighting_factor + renewable_offset + holiday_factor
+    return float(max(30, min(150, prediction)))
+
+def escapeHtml(text):
+    from html import escape
+    return escape(text)
+
 # ==================== ROUTES ====================
 
 @app.route('/api/download-report', methods=['GET'])
@@ -1153,6 +1174,19 @@ def download_report():
 def email_report():
     """Generate PDF report and email to user"""
     try:
+        # Check email configuration first
+        if not EMAIL_SENDER or EMAIL_SENDER == 'your-email@gmail.com':
+            return jsonify({
+                'success': False, 
+                'error': 'Email not configured. Please contact administrator to set up EMAIL_SENDER and EMAIL_PASSWORD in environment variables.'
+            }), 500
+        
+        if not EMAIL_PASSWORD or EMAIL_PASSWORD == 'your-app-password':
+            return jsonify({
+                'success': False,
+                'error': 'Email password not configured. Please contact administrator.'
+            }), 500
+        
         user_email = session.get('user_id')
         users = load_users()
         user_name = users.get(user_email, {}).get('name', 'User')
@@ -1160,7 +1194,7 @@ def email_report():
         pdf_buffer = generate_pdf_report(user_email)
         
         if not pdf_buffer:
-            return jsonify({'success': False, 'error': 'No predictions available'}), 400
+            return jsonify({'success': False, 'error': 'No predictions available. Make some predictions first!'}), 400
         
         success = send_email_with_report(user_email, user_name, pdf_buffer)
         
@@ -1172,12 +1206,14 @@ def email_report():
         else:
             return jsonify({
                 'success': False,
-                'error': 'Failed to send email. Please check email configuration.'
+                'error': 'Failed to send email. Please verify your email address or contact support.'
             }), 500
     
     except Exception as e:
         print(f"Email report error: {e}")
-        return jsonify({'success': False, 'error': str(e)}), 500
+        import traceback
+        traceback.print_exc()
+        return jsonify({'success': False, 'error': f'Email error: {str(e)}'}), 500
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -1348,76 +1384,6 @@ def extract_from_file():
         traceback.print_exc()
         return jsonify({'success': False, 'error': f'Server error: {str(e)}'}), 500
 
-# ==================== FEATURE ENGINEERING ====================
-
-def create_features(input_data):
-    timestamp = datetime.strptime(input_data['timestamp'], '%Y-%m-%dT%H:%M')
-    hour = timestamp.hour
-    
-    temperature = input_data['Temperature']
-    humidity = input_data['Humidity']
-    occupancy = input_data['Occupancy']
-    hvac_usage = 1 if input_data['HVACUsage'] == 'On' else 0
-    lighting_usage = 1 if input_data['LightingUsage'] == 'On' else 0
-    
-    thermal_energy_load = temperature * hvac_usage * 1.5
-    occupancy_energy_load = occupancy * 3.0
-    environmental_stress_level = (temperature * humidity) / 100.0
-    high_temp_regime = 1 if temperature > 25 else 0
-    high_occupancy_regime = 1 if occupancy >= 5 else 0
-    is_peak_hour = 1 if 18 <= hour <= 22 else 0
-    hvac_on_peak = hvac_usage * is_peak_hour
-    
-    temp_bucket = 0 if temperature < 20 else (1 if temperature < 25 else 2)
-    
-    recent_consumption_level = 50 + (temperature - 20) * 1.5 + occupancy * 3
-    load_consistency = 0.8
-    daily_usage_sin = np.sin(2 * np.pi * hour / 24)
-    daily_usage_cos = np.cos(2 * np.pi * hour / 24)
-    load_change_1h = 0.0
-    hvac_stress = hvac_usage * (abs(temperature - 22) / 10.0)
-    lighting_demand_intensity = lighting_usage * occupancy * 0.5
-    short_term_trend = 0.0
-    
-    features = pd.DataFrame([{
-        'Temperature': temperature,
-        'Humidity': humidity,
-        'Occupancy': occupancy,
-        'HVACUsage': hvac_usage,
-        'LightingUsage': lighting_usage,
-        'Thermal_Energy_Load': thermal_energy_load,
-        'Occupancy_Energy_Load': occupancy_energy_load,
-        'Environmental_Stress_Level': environmental_stress_level,
-        'High_Temp_Regime': high_temp_regime,
-        'High_Occupancy_Regime': high_occupancy_regime,
-        'HVAC_On_Peak': hvac_on_peak,
-        'Temp_Bucket': temp_bucket,
-        'Recent_Consumption_Level': recent_consumption_level,
-        'Load_Consistency': load_consistency,
-        'Daily_Usage_Sin': daily_usage_sin,
-        'Daily_Usage_Cos': daily_usage_cos,
-        'Load_Change_1H': load_change_1h,
-        'HVAC_Stress': hvac_stress,
-        'Lighting_Demand_Intensity': lighting_demand_intensity,
-        'Is_Peak_Hour': is_peak_hour,
-        'Short_Term_Trend': short_term_trend
-    }])
-    
-    return features
-
-def fallback_prediction(data):
-    base = 50.0
-    temp_factor = (data['Temperature'] - 20) * 1.5
-    occupancy_factor = data['Occupancy'] * 3
-    sqft_factor = data['SquareFootage'] / 50
-    hvac_factor = 20 if data['HVACUsage'] == 'On' else 0
-    lighting_factor = 10 if data['LightingUsage'] == 'On' else 0
-    renewable_offset = data['RenewableEnergy'] * -0.5
-    holiday_factor = -5 if data['Holiday'] == 'Yes' else 0
-    
-    prediction = base + temp_factor + occupancy_factor + sqft_factor + hvac_factor + lighting_factor + renewable_offset + holiday_factor
-    return float(max(30, min(150, prediction)))
-
 # ==================== API ENDPOINTS ====================
 
 @app.route('/api/predict', methods=['POST'])
@@ -1559,36 +1525,17 @@ def submit_review():
         data = request.get_json()
         user_email = session.get('user_id')
         
-        if USE_POSTGRESQL and db:
-            # Get user
-            user = User.query.filter_by(email=user_email).first()
-            if not user:
-                return jsonify({'success': False, 'error': 'User not found'}), 404
-            
-            success = add_review(
-                user_email=user_email,
-                user_name=data.get('user_name', 'Anonymous'),
-                rating=data.get('rating', 5),
-                comment=data.get('comment', '')
-            )
-            
-            if success:
-                return jsonify({'success': True, 'message': 'Thank you!'})
-            else:
-                return jsonify({'success': False, 'error': 'Failed to save review'}), 400
+        success = add_review(
+            user_email=user_email,
+            user_name=data.get('name', 'Anonymous'),
+            rating=data.get('rating', 5),
+            comment=data.get('comment', '')
+        )
+        
+        if success:
+            return jsonify({'success': True, 'message': 'Thank you!'})
         else:
-            # JSON fallback
-            success = add_review(
-                user_email=user_email,
-                user_name=data.get('user_name', 'Anonymous'),
-                rating=data.get('rating', 5),
-                comment=data.get('comment', '')
-            )
-            
-            if success:
-                return jsonify({'success': True, 'message': 'Thank you!'})
-            else:
-                return jsonify({'success': False, 'error': 'Failed to save review'}), 400
+            return jsonify({'success': False, 'error': 'Failed to save review'}), 400
     
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 400
@@ -1631,8 +1578,8 @@ def system_status():
     return jsonify({
         'success': True,
         'database': {
-            'type': 'postgresql' if USE_POSTGRESQL else 'json',
-            'ready': USE_POSTGRESQL and db is not None
+            'type': 'mongodb' if USE_MONGODB else 'json',
+            'ready': USE_MONGODB and db is not None
         },
         'ai_status': {
             'groq': {'available': GROQ_READY, 'priority': 1},
@@ -1787,8 +1734,8 @@ if __name__ == '__main__':
     print("✅ Database initialization complete\n")
     
     # Check database type
-    if USE_POSTGRESQL and db:
-        print("📊 Database: PostgreSQL ✅")
+    if USE_MONGODB and db is not None:
+        print("📊 Database: MongoDB Atlas ✅")
     else:
         print("📊 Database: JSON Fallback ⚠️")
     
