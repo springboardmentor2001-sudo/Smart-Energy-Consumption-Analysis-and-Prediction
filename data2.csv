@@ -1,0 +1,7 @@
+Temperature,Humidity,SquareFootage,Occupancy,LightingUsage,HVACUsage,RenewableEnergy,Hour,DayOfWeek,Holiday
+25.14,43.43,1565.69,1,Off,On,2.77,0,0,No
+27.73,54.23,1411.06,1,On,On,21.83,1,5,No
+28.70,58.91,1755.72,2,Off,Off,6.76,2,6,No
+20.08,50.37,1452.32,1,On,Off,8.62,3,2,No
+23.10,51.40,1094.13,9,Off,On,3.07,4,4,No
+26.50,48.20,1620.45,3,On,On,12.45,14,4,Yes
