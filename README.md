@@ -1,520 +1,191 @@
-# Smart-Energy-Consumption-Analysis-and-Prediction
-Using the SmartHome Energy Monitoring Dataset with detailed timestamped device-level power readings collected over six months, the system performs time series analysis and forecasting using Long Short-Term Memory (LSTM) networks and Linear Regression as a baseline model.
+# Smart Energy Predictor - Bug Fixes & Corrections
 
-# ⚡ Smart Energy Predictor
+## Summary of Issues Fixed
 
-> An intelligent web application that predicts energy consumption using machine learning and provides personalized energy-saving recommendations.
+### 1. **Missing Chatbot Endpoint (CRITICAL BUG)**
+**Problem**: The `chatbot.html` file was calling `/chatbot/chat` endpoint, but this endpoint didn't exist in `app.py`. This caused the chatbot to completely fail.
 
-[![Live Demo](https://img.shields.io/badge/demo-live-brightgreen)](https://smart-energy-consumption-analysis-and-y4sj.onrender.com)
-[![Python](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
-[![Flask](https://img.shields.io/badge/flask-3.0.0-lightgrey.svg)](https://flask.palletsprojects.com/)
-[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+**Solution**: Added the `/chatbot/chat` endpoint to handle conversational queries with pre-built responses for common energy-related questions.
 
----
+```python
+@app.route('/chatbot/chat', methods=['POST'])
+def chatbot_chat():
+    """Chatbot conversation endpoint"""
+    if 'user_id' not in session:
+        return jsonify({'error': 'Not authenticated'}), 401
+    
+    data = request.json
+    user_message = data.get('message', '')
+    
+    if not user_message:
+        return jsonify({'error': 'No message'}), 400
+    
+    response = get_chatbot_response(user_message)
+    return jsonify({'response': response})
+```
 
-## 🌟 Features
+### 2. **Device Data Not Being Sent**
+**Problem**: The prediction form wasn't properly collecting and sending device data to the backend.
 
-### Core Functionality
-- **🔮 Energy Consumption Prediction** - ML-powered predictions based on multiple environmental and usage factors
-- **📊 Interactive Dashboard** - Tabbed interface with Results, Suggestions, and History views
-- **💡 Personalized Recommendations** - AI-generated energy-saving tips based on your usage patterns
-- **📈 Prediction History** - Track and visualize your energy consumption trends over time
-- **🤖 Conversational Chatbot** - Step-by-step guided predictions through interactive chat
+**Solution**: Updated the prediction endpoint to accept device data from the frontend and properly store it in the device profile.
 
-### Advanced Features
-- **📁 File Upload** - Batch predictions via CSV/PDF file uploads
-- **🌤️ Live Weather Integration** - Auto-fill temperature and humidity data from OpenWeatherMap API
-- **🏠 Device Profiling** - Track household devices for device-specific suggestions
-- **📉 Comparison Analytics** - Compare your usage against similar homes
-- **💰 Savings Calculator** - Estimate potential energy and cost savings
+### 3. **Chatbot Response Function**
+Added comprehensive `get_chatbot_response()` function that handles common energy-related queries:
+- Peak hours information
+- High bill explanations
+- Device consumption details
+- Energy-saving tips
+- Solar/renewable energy info
+- Temperature optimization
+- And more...
 
-### User Experience
-- **🎨 Modern UI** - Clean purple gradient theme with smooth animations
-- **📱 Responsive Design** - Works seamlessly on desktop, tablet, and mobile
-- **🔐 Secure Authentication** - User accounts with encrypted password storage
-- **⚡ Real-time Updates** - Instant predictions and dynamic chart updates
+## How to Run the Corrected Application
 
----
-
-## 🚀 Demo
-
-**Live Website:** [!LIVE DEMO](https://smart-energy-consumption-analysis-and-y4sj.onrender.com)
-
----
-
-## 🛠️ Technologies Used
-
-### Backend
-- **Flask 3.0.0** - Web framework
-- **SQLAlchemy** - Database ORM
-- **LightGBM / Scikit-learn** - Machine learning models
-- **PyPDF2** - PDF file processing
-- **Pandas & NumPy** - Data processing
-
-### Frontend
-- **HTML5 & CSS3** - Structure and styling
-- **JavaScript (ES6+)** - Interactive features
-- **Chart.js** - Data visualization
-- **Responsive Grid Layout** - Mobile-first design
-
-### Database
-- **SQLite** - Development database
-- **PostgreSQL** - Production database (recommended)
-
-### APIs
-- **OpenWeatherMap API** - Live weather data
-
----
-
-## 📋 Prerequisites
-
-- Python 3.8 or higher
-- pip (Python package manager)
-- Git
-- OpenWeatherMap API key (optional, for live weather)
-
----
-
-## 🔧 Installation
-
-### 1. Clone the Repository
-
+### Prerequisites
 ```bash
-git clone https://github.com/YOUR_USERNAME/smart-energy-predictor.git
-cd smart-energy-predictor
+pip install flask flask-sqlalchemy werkzeug python-dotenv pandas pypdf2 requests
 ```
 
-### 2. Create Virtual Environment
-
-```bash
-# Windows
-python -m venv venv
-venv\Scripts\activate
-
-# macOS/Linux
-python3 -m venv venv
-source venv/bin/activate
+### Environment Setup
+Create a `.env` file:
+```
+FLASK_SECRET_KEY=your-super-secret-key-here
+OPENWEATHER_API_KEY=your-api-key-here  # Optional
 ```
 
-### 3. Install Dependencies
-
-```bash
-pip install -r requirements.txt
-```
-
-### 4. Configure Environment Variables
-
-Create a `.env` file in the root directory:
-
-```env
-SECRET_KEY=your-secret-key-here
-WEATHER_API_KEY=your-openweathermap-api-key
-DATABASE_URL=sqlite:///energy_predictor.db
-FLASK_ENV=development
-```
-
-### 5. Initialize Database
-
-```bash
-python
->>> from app import app, db
->>> with app.app_context():
-...     db.create_all()
->>> exit()
-```
-
-### 6. Run the Application
-
+### Running the Application
 ```bash
 python app.py
 ```
 
-Visit `http://127.0.0.1:5000` in your browser.
+The app will be available at: `http://127.0.0.1:5000`
 
----
-
-## 📁 Project Structure
-
+## File Structure
 ```
-smart-energy-predictor/
-│
-├── app.py                          # Main Flask application
-├── requirements.txt                # Python dependencies
-├── README.md                       # Project documentation
-├── .env                           # Environment variables (create this)
-├── .gitignore                     # Git ignore file
-│
-├── templates/                      # HTML templates
-│   ├── base.html                  # Base template with navigation
-│   ├── login.html                 # Login page
-│   ├── signup.html                # Registration page
-│   ├── home.html                  # Landing page
-│   ├── about.html                 # About page
-│   ├── prediction.html            # Main prediction interface
-│   ├── chatbot.html               # Conversational chatbot
-│   ├── contact.html               # Contact/feedback page
-│   └── device_survey.html         # Device profiling (optional)
-│
-│
-├── instance/                       # Instance-specific files
-│   └── energy_predictor.db        # SQLite database (auto-generated)
-│
-├── uploads/                        # User-uploaded files (auto-generated)
-│
-├── models/                         # ML models
-    └── smart_energy_model.pkl     # Trained prediction model
-
+project/
+├── app.py                  # Main Flask application (CORRECTED)
+├── templates/
+│   ├── base.html
+│   ├── home.html
+│   ├── about.html
+│   ├── login.html
+│   ├── signup.html
+│   ├── prediction.html
+│   ├── chatbot.html
+│   ├── contact.html
+│   └── device_survey.html
+├── energy_predictor.db     # SQLite database (auto-created)
+└── uploads/                # File upload directory
 ```
 
----
+## Key Features Working
 
-## 💡 Usage Guide
+### ✅ Authentication System
+- User registration and login
+- Password hashing with werkzeug security
+- Session management
 
-### Making Your First Prediction
+### ✅ Prediction Engine
+- Form-based energy prediction
+- Weather integration (with API key)
+- Device profile integration
+- Personalized suggestions
+- Historical predictions chart
 
-1. **Sign Up / Login**
-   - Create an account with email and password
-   - Login to access the dashboard
+### ✅ Chatbot Assistant (NOW WORKING!)
+- Conversational AI responses
+- Energy-saving tips
+- Peak hours information
+- Device consumption guidance
+- Quick action buttons
 
-2. **Enter Energy Data**
-   - Navigate to **Prediction** tab
-   - Fill in the form:
-     - Temperature (°C)
-     - Humidity (%)
-     - Square Footage
-     - Occupancy (number of people)
-     - HVAC Status (On/Off)
-     - Lighting Status (On/Off)
-     - Renewable Energy (kWh)
-   - Optionally select your household devices
+### ✅ Device Survey
+- Track household appliances
+- Personalized recommendations based on devices
 
-3. **Get Live Weather** (Optional)
-   - Enter your city name
-   - Click "Get Weather" to auto-fill temperature and humidity
+### ✅ Contact Form
+- User feedback collection
+- Rating system
 
-4. **Generate Prediction**
-   - Click "Generate Prediction & Suggestions"
-   - View results with:
-     - Predicted consumption in kWh
-     - Comparison with similar homes
-     - Personalized energy-saving tips
-     - Potential savings calculation
+## API Endpoints
 
-### Using File Upload
+### Authentication
+- `POST /login` - User login
+- `POST /signup` - User registration
+- `GET /logout` - User logout
 
-Upload CSV or PDF files for batch predictions:
+### Main Pages
+- `GET /home` - Home page
+- `GET /about` - About page
+- `GET /prediction` - Prediction page
+- `GET /chatbot` - Chatbot page
+- `GET /contact` - Contact page
+- `GET /device-survey` - Device survey page
 
-**CSV Format:**
-```csv
-temperature,humidity,square_footage,occupancy,hvac_usage,lighting_usage,renewable_energy
-22.5,55,2000,4,1,1,15
-25.0,60,1800,3,1,0,20
-```
+### API Endpoints
+- `POST /prediction` - Make energy prediction
+- `POST /chatbot/chat` - **NEW!** Chatbot conversation
+- `GET /api/weather/<city>` - Get weather data
+- `GET /api/prediction_history` - Get user's prediction history
+- `POST /prediction/upload` - Upload CSV/PDF for batch predictions
 
-**PDF Format:**
-```
-Temperature: 25°C
-Humidity: 60%
-Square Footage: 2000
-Occupancy: 4
-HVAC: On
-Lighting: On
-Renewable Energy: 15 kWh
-```
-
-### Using the Chatbot
-
-1. Navigate to **Chatbot** tab
-2. Answer questions one by one:
-   - Temperature
-   - Humidity
-   - Square footage
-   - Occupancy
-   - HVAC status
-   - Lighting status
-   - Renewable energy
-3. Get instant prediction with suggestions
-
----
-
-## 🤖 Machine Learning Model
-
-### Model Details
-- **Algorithm:** LightGBM Regressor
-- **Features:** 20+ engineered features including:
-  - Environmental: Temperature, Humidity
-  - Building: Square Footage
-  - Usage: Occupancy, HVAC, Lighting
-  - Time-based: Hour, Day, Month, Weekend
-  - Engineered: Temp_Occupancy, Area_Occupancy, Renewable_Ratio
-  - Categorical: Day of Week (one-hot encoded)
-
-### Model Performance
-- **R² Score:** ~0.95
-- **RMSE:** ~5.2 kWh
-- **MAE:** ~3.8 kWh
-
-### Prediction Logic
-```python
-def prepare_features(data):
-    # Auto-calculate time features
-    now = datetime.now()
-    hour = now.hour
-    day = now.day
-    month = now.month
-    is_weekend = 1 if now.strftime('%A') in ['Saturday', 'Sunday'] else 0
-    
-    # Engineer features
-    temp_occupancy = temperature * occupancy
-    area_occupancy = square_footage * occupancy
-    
-    # Return feature array for model
-    return features_df
-```
-
----
-
-## 📊 Database Schema
+## Database Schema
 
 ### User Table
-```sql
-CREATE TABLE user (
-    id INTEGER PRIMARY KEY,
-    email VARCHAR(120) UNIQUE NOT NULL,
-    password VARCHAR(200) NOT NULL
-);
-```
+- id, email, password
+- Relationships: predictions, device_profile
 
 ### Prediction Table
-```sql
-CREATE TABLE prediction (
-    id INTEGER PRIMARY KEY,
-    user_id INTEGER FOREIGN KEY,
-    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
-    temperature FLOAT,
-    humidity FLOAT,
-    square_footage FLOAT,
-    occupancy INTEGER,
-    hvac_usage INTEGER,
-    lighting_usage INTEGER,
-    renewable_energy FLOAT,
-    predicted_consumption FLOAT
-);
-```
+- id, user_id, timestamp
+- temperature, humidity, square_footage, occupancy
+- hvac_usage, lighting_usage, renewable_energy
+- predicted_consumption
 
 ### DeviceProfile Table
-```sql
-CREATE TABLE device_profile (
-    id INTEGER PRIMARY KEY,
-    user_id INTEGER FOREIGN KEY,
-    tvs INTEGER DEFAULT 0,
-    refrigerators INTEGER DEFAULT 0,
-    washing_machines INTEGER DEFAULT 0,
-    dryers INTEGER DEFAULT 0,
-    computers INTEGER DEFAULT 0,
-    ac_units INTEGER DEFAULT 0,
-    water_heaters INTEGER DEFAULT 0,
-    dishwashers INTEGER DEFAULT 0,
-    updated_at DATETIME
-);
-```
+- id, user_id
+- tvs, refrigerators, washing_machines, dryers
+- computers, ac_units, water_heaters, dishwashers
+- updated_at
 
 ### Contact Table
-```sql
-CREATE TABLE contact (
-    id INTEGER PRIMARY KEY,
-    name VARCHAR(100),
-    email VARCHAR(120),
-    query TEXT,
-    rating INTEGER,
-    timestamp DATETIME
-);
-```
+- id, name, email, query, rating, timestamp
 
----
+## Testing the Chatbot
 
-## 🌐 API Endpoints
+Try these example queries:
+1. "Hi" - Get a greeting
+2. "What are peak hours?" - Learn about peak energy times
+3. "Why is my bill high?" - Get bill analysis
+4. "Which devices use most energy?" - See top consumers
+5. "How can I save?" - Get energy-saving tips
+6. "Tell me about solar" - Learn about renewable options
 
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/` | GET | Home redirect |
-| `/login` | GET, POST | User login |
-| `/signup` | GET, POST | User registration |
-| `/logout` | GET | User logout |
-| `/home` | GET | Landing page |
-| `/about` | GET | About page |
-| `/prediction` | GET, POST | Prediction form & processing |
-| `/prediction/upload` | POST | File upload predictions |
-| `/chatbot` | GET | Chatbot interface |
-| `/chatbot/predict` | POST | Chatbot prediction |
-| `/device-survey` | GET, POST | Device profiling |
-| `/contact` | GET, POST | Contact form |
-| `/api/prediction_history` | GET | Get user's prediction history (JSON) |
-| `/api/weather/{city}` | GET | Get live weather data (JSON) |
+## Notes
+- The mock energy model is simplified for demonstration
+- Weather API key is optional (uses mock data if not provided)
+- File upload feature is stubbed (can be implemented fully if needed)
+- All passwords are hashed before storage
+- Session-based authentication throughout
 
----
+## Troubleshooting
 
-## 🎨 Customization
+### Chatbot Not Responding?
+- Check browser console for errors
+- Verify `/chatbot/chat` endpoint is accessible
+- Ensure user is logged in (check session)
 
-### Changing Colors
+### Weather Not Loading?
+- Get free API key from https://openweathermap.org/api
+- Add to .env file as OPENWEATHER_API_KEY
+- Or use mock data (default behavior)
 
-Edit the CSS gradient in `templates/base.html` and `prediction.html`:
+### Database Errors?
+- Delete `energy_predictor.db` and restart
+- Database will be recreated automatically
 
-```css
-/* Purple gradient (default) */
-background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-
-/* Blue gradient */
-background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-
-/* Green gradient */
-background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
-```
-
-### Adding New Features
-
-To add input fields to the prediction form:
-
-1. Add field to `prediction.html` form
-2. Update `prepare_features()` in `app.py`
-3. Retrain model with new feature
-4. Update `generate_suggestions()` for new advice
-
-### Modifying Suggestions
-
-Edit the `generate_suggestions()` function in `app.py`:
-
-```python
-if your_condition:
-    suggestions.append({
-        'category': 'Your Category',
-        'icon': '🎯',
-        'message': 'Your message',
-        'action': 'What to do',
-        'savings': 'X kWh/day'
-    })
-```
-
----
-
-## 🚀 Deployment
-
-### Deploy to Heroku
-
-```bash
-# Install Heroku CLI
-# Login to Heroku
-heroku login
-
-# Create Heroku app
-heroku create your-app-name
-
-# Add PostgreSQL
-heroku addons:create heroku-postgresql:hobby-dev
-
-# Set environment variables
-heroku config:set SECRET_KEY=your-secret-key
-heroku config:set WEATHER_API_KEY=your-api-key
-
-# Deploy
-git push heroku main
-
-# Initialize database
-heroku run python
->>> from app import app, db
->>> with app.app_context():
-...     db.create_all()
-```
-
-### Deploy to Railway / Render
-
-1. Connect GitHub repository
-2. Set environment variables
-3. Deploy automatically on push
-
-### Deploy to AWS / DigitalOcean
-
-Use Gunicorn for production:
-
-```bash
-pip install gunicorn
-gunicorn app:app
-```
-
----
-
-## 🔒 Security Best Practices
-
-- ✅ Passwords are hashed using Werkzeug's security module
-- ✅ Session management with secure cookies
-- ✅ CSRF protection (recommended: add Flask-WTF)
-- ✅ Input validation on all forms
-- ✅ File upload size limits (16MB max)
-- ✅ SQL injection prevention via SQLAlchemy ORM
-- ⚠️ **Remember:** Change `SECRET_KEY` before deployment
-- ⚠️ **Use HTTPS** in production
-- ⚠️ **Enable rate limiting** for API endpoints
-
----
-
-## 🐛 Troubleshooting
-
-### Common Issues
-
-**Issue:** Database errors on first run
-```bash
-# Solution: Initialize database
-python
->>> from app import app, db
->>> with app.app_context():
-...     db.create_all()
-```
-
-**Issue:** Weather API not working
-```bash
-# Solution: Check API key in .env
-WEATHER_API_KEY=your-actual-api-key
-```
-
-**Issue:** File upload fails
-```bash
-# Solution: Install PyPDF2
-pip install PyPDF2
-```
-
-**Issue:** Port 5000 already in use
-```python
-# Solution: Change port in app.py
-if __name__ == '__main__':
-    app.run(debug=True, port=5001)
-```
-
----
-
-## 📈 Future Enhancements
-
-- [ ] Email notifications for high consumption
-- [ ] Mobile app (React Native)
-- [ ] Integration with smart home devices (IoT)
-- [ ] Historical data analysis & trends
-- [ ] Social features (community comparisons)
-- [ ] Export reports to PDF
-- [ ] Multi-language support
-- [ ] Admin dashboard
-- [ ] Advanced ML models (LSTM for time series)
-- [ ] Carbon footprint calculation
-
-## 📝 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
----
-
-## 👥 Authors
-
-- GitHub: [@Sanjana1125](https://github.com/Sanjana1125)
-- LinkedIn: [Sanjana Chinamuthevi](https://linkedin.com/in/sanjana-chinamuthevi)
-
----
-
-**Made with ❤️ and ⚡ for a sustainable future**
+## Future Enhancements
+- Real machine learning model integration
+- Advanced file parsing for CSV/PDF uploads
+- Real-time energy monitoring dashboard
+- Mobile app integration
+- Social features (energy challenges)
