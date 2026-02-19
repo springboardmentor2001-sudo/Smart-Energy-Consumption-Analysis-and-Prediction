@@ -1,10 +1,16 @@
-from flask import Flask, render_template, request, jsonify, session, redirect, url_for, send_file
+from flask import Flask, render_template, request, jsonify, send_file
 import os
 from dotenv import load_dotenv
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
-from functools import wraps
 import secrets
+from io import BytesIO
+from datetime import datetime, timedelta
+
+# Import our new modules
+from auth import create_token, jwt_required, get_current_user
+from email_service import send_report, send_simple_email
+from functools import wraps
 from reportlab.lib.pagesizes import letter, A4
 from reportlab.lib import colors
 from reportlab.lib.units import inch
@@ -12,11 +18,7 @@ from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, 
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.enums import TA_CENTER, TA_LEFT
 from io import BytesIO
-import smtplib
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
-from email.mime.base import MIMEBase
-from email import encoders
+
 
 # Try to import CORS
 try:
@@ -111,11 +113,13 @@ if MONGODB_AVAILABLE and MONGODB_URI:
         users_collection = db['users']
         predictions_collection = db['predictions']
         reviews_collection = db['reviews']
+        chat_collection = db['chat_history']
         
         # Create indexes
         users_collection.create_index('email', unique=True)
         predictions_collection.create_index([('user_email', 1), ('timestamp', -1)])
         reviews_collection.create_index('timestamp')
+        chat_collection.create_index([('user_email', 1), ('timestamp', -1)])
         
         USE_MONGODB = True
         print("✅ MongoDB Atlas connected successfully")
@@ -153,6 +157,165 @@ def init_json_databases():
         with open(REVIEWS_FILE, 'w') as f:
             json.dump([], f, indent=2)
         print(f"✅ Created {REVIEWS_FILE}")
+        
+    CHAT_HISTORY_FILE = os.path.join(JSON_DB_DIR, 'chat_history.json')
+    if not os.path.exists(CHAT_HISTORY_FILE):
+        with open(CHAT_HISTORY_FILE, 'w') as f:
+            json.dump({}, f, indent=2)
+        print(f"✅ Created {CHAT_HISTORY_FILE}")
+
+CHAT_HISTORY_FILE = os.path.join(JSON_DB_DIR, 'chat_history.json')
+
+def load_chat_history(user_email):
+    """Load chat history for a specific user from MongoDB or JSON"""
+    user_email = user_email.lower().strip()
+    
+    if USE_MONGODB and db is not None:
+        try:
+            # Get all messages for this user, sorted by timestamp
+            messages = list(db.chat_history.find(
+                {'user_email': user_email}
+            ).sort('timestamp', 1).limit(50))  # Last 50 messages
+            
+            # Format for AI context
+            formatted_messages = []
+            for msg in messages:
+                formatted_messages.append({
+                    'role': 'user',
+                    'content': msg['user_message'],
+                    'timestamp': msg['timestamp']
+                })
+                formatted_messages.append({
+                    'role': 'assistant',
+                    'content': msg['ai_response'],
+                    'timestamp': msg['response_timestamp']
+                })
+            
+            return formatted_messages
+        except Exception as e:
+            print(f"⚠️ Error loading chat history from MongoDB: {e}")
+            return []
+    else:
+        # JSON fallback
+        try:
+            if os.path.exists(CHAT_HISTORY_FILE):
+                with open(CHAT_HISTORY_FILE, 'r', encoding='utf-8') as f:
+                    all_history = json.load(f)
+                    
+                    # Get this user's history
+                    user_history = all_history.get(user_email, [])
+                    
+                    # Format for AI context
+                    formatted_messages = []
+                    for exchange in user_history:
+                        formatted_messages.append({
+                            'role': 'user',
+                            'content': exchange['user_message'],
+                            'timestamp': exchange['timestamp']
+                        })
+                        formatted_messages.append({
+                            'role': 'assistant',
+                            'content': exchange['ai_response'],
+                            'timestamp': exchange['response_timestamp']
+                        })
+                    
+                    return formatted_messages[-50:]  # Last 50 messages
+        except Exception as e:
+            print(f"⚠️ Error loading chat history from JSON: {e}")
+            return []
+        
+        return []
+
+
+def save_chat_message(user_email, user_message, ai_response, ai_model):
+    """Save a chat exchange to database"""
+    user_email = user_email.lower().strip()
+    
+    if USE_MONGODB and db is not None:
+        try:
+            db.chat_history.insert_one({
+                'user_email': user_email,
+                'user_message': user_message,
+                'ai_response': ai_response,
+                'ai_model': ai_model,  # groq, gemini, or fallback
+                'timestamp': datetime.now().isoformat(),
+                'response_timestamp': datetime.now().isoformat()
+            })
+            print(f"✅ Chat saved to MongoDB")
+            return True
+        except Exception as e:
+            print(f"❌ Error saving chat to MongoDB: {e}")
+            return False
+    else:
+        # JSON fallback
+        try:
+            # Load existing history
+            if os.path.exists(CHAT_HISTORY_FILE):
+                with open(CHAT_HISTORY_FILE, 'r', encoding='utf-8') as f:
+                    all_history = json.load(f)
+            else:
+                all_history = {}
+            
+            # Initialize user's history if not exists
+            if user_email not in all_history:
+                all_history[user_email] = []
+            
+            # Add new message exchange
+            all_history[user_email].append({
+                'user_message': user_message,
+                'ai_response': ai_response,
+                'ai_model': ai_model,
+                'timestamp': datetime.now().isoformat(),
+                'response_timestamp': datetime.now().isoformat()
+            })
+            
+            # Keep only last 50 messages per user to avoid huge file
+            all_history[user_email] = all_history[user_email][-50:]
+            
+            # Save back to file
+            from pathlib import Path
+            Path(JSON_DB_DIR).mkdir(parents=True, exist_ok=True)
+            with open(CHAT_HISTORY_FILE, 'w', encoding='utf-8') as f:
+                json.dump(all_history, f, indent=2, ensure_ascii=False)
+            
+            print(f"✅ Chat saved to JSON")
+            return True
+        except Exception as e:
+            print(f"❌ Error saving chat to JSON: {e}")
+            return False
+
+
+def clear_chat_history(user_email):
+    """Clear all chat history for a user"""
+    user_email = user_email.lower().strip()
+    
+    if USE_MONGODB and db is not None:
+        try:
+            db.chat_history.delete_many({'user_email': user_email})
+            print(f"✅ Chat history cleared for {user_email}")
+            return True
+        except Exception as e:
+            print(f"❌ Error clearing chat: {e}")
+            return False
+    else:
+        # JSON fallback
+        try:
+            if os.path.exists(CHAT_HISTORY_FILE):
+                with open(CHAT_HISTORY_FILE, 'r', encoding='utf-8') as f:
+                    all_history = json.load(f)
+                
+                if user_email in all_history:
+                    all_history[user_email] = []
+                
+                with open(CHAT_HISTORY_FILE, 'w', encoding='utf-8') as f:
+                    json.dump(all_history, f, indent=2, ensure_ascii=False)
+                
+                print(f"✅ Chat history cleared for {user_email}")
+                return True
+        except Exception as e:
+            print(f"❌ Error clearing chat: {e}")
+            return False
+
 
 if CORS_AVAILABLE:
     CORS(app)
@@ -436,6 +599,53 @@ def save_prediction(user_email, prediction_data):
             print(f"❌ Error saving prediction to JSON: {e}")
             return False
 
+import pytz
+
+def convert_utc_to_ist(utc_time_str):
+    """Convert UTC ISO string to IST - handles both ISO and pre-formatted dates"""
+    if not utc_time_str:
+        return utc_time_str
+    
+    try:
+        utc_time_str = str(utc_time_str).strip()
+        
+        # Check if it's already formatted (contains spaces but no timezone info)
+        # Pattern: "2026-01-21 10:30:45"
+        if ' ' in utc_time_str and 'T' not in utc_time_str and '+' not in utc_time_str and 'Z' not in utc_time_str:
+            # Already formatted correctly - just return it
+            return utc_time_str
+        
+        # Parse ISO format UTC timestamp
+        if 'Z' in utc_time_str:
+            utc_time = datetime.fromisoformat(utc_time_str.replace('Z', '+00:00'))
+        elif 'T' in utc_time_str:
+            # ISO format with or without timezone
+            if '+' in utc_time_str or utc_time_str.endswith('Z'):
+                utc_time = datetime.fromisoformat(utc_time_str.replace('Z', '+00:00'))
+            else:
+                # No timezone info, assume UTC
+                utc_time = datetime.fromisoformat(utc_time_str)
+                utc_time = utc_time.replace(tzinfo=pytz.utc)
+        else:
+            # Not a recognized timestamp format, return as-is
+            return utc_time_str
+        
+        # Ensure it has timezone info (UTC)
+        if utc_time.tzinfo is None:
+            utc_time = utc_time.replace(tzinfo=pytz.utc)
+        
+        # Convert to IST
+        ist = pytz.timezone('Asia/Kolkata')
+        ist_time = utc_time.astimezone(ist)
+        
+        # Return formatted string
+        return ist_time.strftime('%Y-%m-%d %H:%M:%S')
+    except Exception as e:
+        print(f"⚠️ Date conversion error for '{utc_time_str}': {e}")
+        # If conversion fails, return original string
+        return utc_time_str
+
+# Then modify your get_user_predictions function (around line 405):
 def get_user_predictions(user_email):
     """Get predictions for a specific user"""
     user_email = user_email.lower().strip()
@@ -448,14 +658,14 @@ def get_user_predictions(user_email):
             
             return [
                 {
-                    'timestamp': p.get('timestamp', ''),
+                    'timestamp': convert_utc_to_ist(p.get('timestamp', '')),  # ← CONVERT HERE
                     'prediction': p['prediction'],
                     'usage_level': p['usage_level'],
                     'efficiency_score': p['efficiency_score'],
                     'temperature': p.get('temperature'),
                     'occupancy': p.get('occupancy'),
                     'hvac': p.get('hvac'),
-                    'date': p['date']
+                    'date': convert_utc_to_ist(p.get('date', ''))  # ← CONVERT HERE - NOW FIXED FOR ALL USERS
                 }
                 for p in predictions
             ]
@@ -463,7 +673,7 @@ def get_user_predictions(user_email):
             print(f"❌ Error getting predictions: {e}")
             return []
     else:
-        # JSON fallback
+        # JSON fallback - dates are already in correct format
         history = load_predictions_history()
         return history.get(user_email, [])
 
@@ -627,9 +837,13 @@ def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if 'user_id' not in session:
-            return redirect(url_for('login'))
+            return jsonify({
+                'success': False,
+                'error': 'Unauthorized. Please login again.'
+            }), 401
         return f(*args, **kwargs)
     return decorated_function
+
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
@@ -840,36 +1054,72 @@ def rule_based_extraction(text_content):
     
     return data
 
-def chat_with_groq(message, system_context):
-    """Chat with Groq (PRIMARY)"""
+def chat_with_groq_history(message, system_context, conversation_history):
+    """Chat with Groq including conversation history (PRIMARY)"""
     if not GROQ_READY:
         return None, "Groq not available"
     
     try:
+        # Build messages array with history + new message
+        messages = [
+            {"role": "system", "content": system_context}
+        ]
+        
+        # Add conversation history
+        for hist_msg in conversation_history:
+            messages.append({
+                "role": hist_msg['role'],
+                "content": hist_msg['content']
+            })
+        
+        # Add current user message
+        messages.append({
+            "role": "user",
+            "content": message
+        })
+        
         response = groq_client.chat.completions.create(
-            messages=[
-                {"role": "system", "content": system_context},
-                {"role": "user", "content": message}
-            ],
+            messages=messages,
             model="llama-3.3-70b-versatile",
             temperature=0.7,
             max_tokens=500
         )
         return response.choices[0].message.content, None
     except Exception as e:
-        return None, str(e)
+        error_msg = str(e)
+        print(f"❌ Groq extraction failed: {error_msg[:200]}")
+        return None, error_msg
 
-def chat_with_gemini(message, system_context):
-    """Chat with Gemini (BACKUP)"""
+
+def chat_with_gemini_history(message, system_context, conversation_history):
+    """Chat with Gemini including conversation history (BACKUP)"""
     if not GEMINI_READY:
         return None, "Gemini not available"
     
     try:
-        full_prompt = f"{system_context}\n\nUser message: {message}\n\nYour response:"
+        # Build conversation context string
+        history_context = ""
+        for i, hist_msg in enumerate(conversation_history):
+            if hist_msg['role'] == 'user':
+                history_context += f"User: {hist_msg['content']}\n"
+            else:
+                history_context += f"Assistant: {hist_msg['content']}\n"
+        
+        full_prompt = f"""{system_context}
+
+CONVERSATION HISTORY:
+{history_context}
+
+Current User Message: {message}
+
+Your response:"""
+        
         response = gemini_model.generate_content(full_prompt)
         return response.text, None
     except Exception as e:
-        return None, str(e)
+        error_msg = str(e)
+        print(f"❌ Gemini extraction failed: {error_msg[:200]}")
+        return None, error_msg
 
 def get_fallback_chat_response(message):
     """Enhanced rule-based fallback chat"""
@@ -1148,12 +1398,12 @@ def escapeHtml(text):
 # ==================== ROUTES ====================
 
 @app.route('/api/download-report', methods=['GET'])
-@login_required
+@jwt_required
 def download_report():
-    """Generate and download PDF report"""
+    """Generate and download PDF report (JWT protected)"""
     try:
-        user_email = session.get('user_id')
-        pdf_buffer = generate_pdf_report(user_email)
+        user = get_current_user()
+        pdf_buffer = generate_pdf_report(user['email'])
         
         if not pdf_buffer:
             return jsonify({'success': False, 'error': 'No predictions available'}), 400
@@ -1164,63 +1414,15 @@ def download_report():
             as_attachment=True,
             download_name=f'energy_report_{datetime.now().strftime("%Y%m%d")}.pdf'
         )
-    
+        
     except Exception as e:
         print(f"Download report error: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
-@app.route('/api/email-report', methods=['POST'])
-@login_required
-def email_report():
-    """Generate PDF report and email to user"""
-    try:
-        # Check email configuration first
-        if not EMAIL_SENDER or EMAIL_SENDER == 'your-email@gmail.com':
-            return jsonify({
-                'success': False, 
-                'error': 'Email not configured. Please contact administrator to set up EMAIL_SENDER and EMAIL_PASSWORD in environment variables.'
-            }), 500
-        
-        if not EMAIL_PASSWORD or EMAIL_PASSWORD == 'your-app-password':
-            return jsonify({
-                'success': False,
-                'error': 'Email password not configured. Please contact administrator.'
-            }), 500
-        
-        user_email = session.get('user_id')
-        users = load_users()
-        user_name = users.get(user_email, {}).get('name', 'User')
-        
-        pdf_buffer = generate_pdf_report(user_email)
-        
-        if not pdf_buffer:
-            return jsonify({'success': False, 'error': 'No predictions available. Make some predictions first!'}), 400
-        
-        success = send_email_with_report(user_email, user_name, pdf_buffer)
-        
-        if success:
-            return jsonify({
-                'success': True,
-                'message': f'Report sent successfully to {user_email}'
-            })
-        else:
-            return jsonify({
-                'success': False,
-                'error': 'Failed to send email. Please verify your email address or contact support.'
-            }), 500
-    
-    except Exception as e:
-        print(f"Email report error: {e}")
-        import traceback
-        traceback.print_exc()
-        return jsonify({'success': False, 'error': f'Email error: {str(e)}'}), 500
-
-@app.route('/login', methods=['GET', 'POST'])
+@app.route('/login', methods=['POST'])
 def login():
-    if 'user_id' in session:
-        return redirect(url_for('home'))
-    
-    if request.method == 'POST':
+    """JWT-based login"""
+    try:
         data = request.json
         email = data.get('email', '').strip().lower()
         password = data.get('password', '')
@@ -1228,52 +1430,80 @@ def login():
         if not email or not password:
             return jsonify({'success': False, 'message': 'Email and password required'}), 400
         
-        success, user_name = login_user(email, password)
+        # Verify user credentials
+        success, result = login_user(email, password)
         
-        if success:
-            session.permanent = True
-            session['user_id'] = email
-            session['username'] = user_name
-            return jsonify({'success': True, 'message': 'Login successful'})
-        else:
-            return jsonify({'success': False, 'message': user_name}), 401
-    
-    return render_template('login.html')
+        if not success:
+            return jsonify({'success': False, 'message': result}), 401
+        
+        # result is the user's name
+        user_name = result
+        
+        # Create JWT token
+        token = create_token(email, email)  # Using email as user_id
+        
+        return jsonify({
+            'success': True,
+            'token': token,
+            'name': user_name,
+            'email': email,
+            'message': 'Login successful'
+        })
+        
+    except Exception as e:
+        print(f"Login error: {e}")
+        return jsonify({'success': False, 'message': str(e)}), 500
+
 
 @app.route('/signup', methods=['POST'])
 def signup():
-    data = request.json
-    name = data.get('name', '').strip()
-    email = data.get('email', '').strip().lower()
-    password = data.get('password', '')
-    
-    if not all([name, email, password]):
-        return jsonify({'success': False, 'message': 'All fields required'}), 400
-    
-    if len(password) < 6:
-        return jsonify({'success': False, 'message': 'Password must be 6+ characters'}), 400
-    
-    success, message = register_user(email, name, password)
-    
-    if success:
-        return jsonify({'success': True, 'message': message})
-    else:
-        return jsonify({'success': False, 'message': message}), 400
+    """User registration"""
+    try:
+        data = request.json
+        name = data.get('name', '').strip()
+        email = data.get('email', '').strip().lower()
+        password = data.get('password', '')
+        
+        if not all([name, email, password]):
+            return jsonify({'success': False, 'message': 'All fields required'}), 400
+        
+        if len(password) < 6:
+            return jsonify({'success': False, 'message': 'Password must be 6+ characters'}), 400
+        
+        success, message = register_user(email, name, password)
+        
+        if success:
+            return jsonify({'success': True, 'message': message})
+        else:
+            return jsonify({'success': False, 'message': message}), 400
+            
+    except Exception as e:
+        print(f"Signup error: {e}")
+        return jsonify({'success': False, 'message': str(e)}), 500
 
-@app.route('/logout')
+
+@app.route('/logout', methods=['POST'])
+@jwt_required
 def logout():
-    session.clear()
-    return redirect(url_for('login'))
+    """Logout (client-side token deletion)"""
+    return jsonify({'success': True, 'message': 'Logged out successfully'})
+
 
 @app.route('/')
-@login_required
 def home():
-    return render_template('index.html', username=session.get('username', 'User'))
+    """Serve the main page (no session check, handled client-side)"""
+    return render_template('index.html', username='User')
+
+
+@app.route('/login-page')
+def login_page():
+    """Serve the login page"""
+    return render_template('login.html')
 
 # ==================== FILE UPLOAD ====================
 
 @app.route('/api/extract-from-file', methods=['POST'])
-@login_required
+@jwt_required
 def extract_from_file():
     print("\n" + "="*60)
     print("📁 FILE UPLOAD REQUEST RECEIVED")
@@ -1361,7 +1591,8 @@ def extract_from_file():
             prediction_result = None
         
         if prediction_result:
-            save_prediction(session.get('user_id'), {
+            user = get_current_user()
+            save_prediction(user['email'], {
                 'prediction': prediction_result['prediction'],
                 'usage_level': prediction_result['usage_level'],
                 'efficiency_score': prediction_result['efficiency_score'],
@@ -1387,13 +1618,14 @@ def extract_from_file():
 # ==================== API ENDPOINTS ====================
 
 @app.route('/api/predict', methods=['POST'])
-@login_required
+@jwt_required
 def predict():
     print("\n" + "="*60)
     print("⚡ MANUAL PREDICTION REQUEST")
     print("="*60)
     
     try:
+        user = get_current_user()
         data = request.json
         print(f"📊 Input data: Temp={data['Temperature']}, Humidity={data['Humidity']}, Occupancy={data['Occupancy']}")
         
@@ -1437,7 +1669,7 @@ def predict():
         print(f"📤 Response: {response}")
         print("="*60 + "\n")
         
-        save_prediction(session.get('user_id'), {
+        save_prediction(user['email'], {
             'prediction': response['prediction'],
             'usage_level': response['usage_level'],
             'efficiency_score': response['efficiency_score'],
@@ -1449,18 +1681,21 @@ def predict():
         return jsonify(response)
     
     except Exception as e:
-        print(f"❌ Prediction error: {e}")
-        import traceback
-        traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)}), 400
 
 @app.route('/api/chatbot', methods=['POST'])
-@login_required
+@jwt_required
 def chatbot():
-    """Triple-layer chatbot: Groq → Gemini → Rule-based"""
+    """AI chatbot endpoint with conversation history (JWT protected)"""
     try:
+        user = get_current_user()
         message = request.json.get('message', '').strip()
-        print(f"\n💬 Chatbot message: {message}")
+        
+        print(f"\n💬 Chatbot message from {user['email']}: {message}")
+        
+        # Load conversation history for context
+        conversation_history = load_chat_history(user['email'])
+        print(f"📚 Loaded {len(conversation_history)} previous messages")
         
         system_context = """You are the Smart Energy AI Assistant for a web platform that predicts energy consumption.
 
@@ -1478,27 +1713,43 @@ YOUR ROLE AND CAPABILITIES:
    - Provides: Predictions in kWh, Usage level, Efficiency score, Recommendations
 
 3. ENERGY PREDICTIONS - Guide users through predictions:
-   - When users want predictions, ask for the 8 parameters step-by-step
+   - When users want predictions, ask for the 8 parameters
+   - Remember what they said before (use conversation history)
    - Be encouraging and helpful
+
+4. CONVERSATION MEMORY:
+   - You have access to the full conversation history
+   - Reference previous messages to provide context-aware responses
+   - Remember user preferences mentioned earlier
+   - Avoid repeating questions already answered
 
 RESPONSE STYLE:
 - Keep responses to 2-3 sentences unless explaining features
 - Be conversational and helpful
-- Focus on energy and sustainability"""
+- Focus on energy and sustainability
+- Use conversation history to be more personal"""
 
-        # Layer 1: Try Groq (PRIMARY)
-        print("🟦 Layer 1: Trying Groq (Primary)...")
-        response_text, error = chat_with_groq(message, system_context)
+        # Layer 1: Try Groq (PRIMARY) with conversation history
+        print("🟦 Layer 1: Trying Groq (Primary) with conversation history...")
+        response_text, error = chat_with_groq_history(
+            message, 
+            system_context, 
+            conversation_history
+        )
         ai_used = 'groq'
         
         # Layer 2: Try Gemini if Groq failed (BACKUP)
         if response_text is None:
             print(f"⚠️  Groq failed: {error[:100]}")
-            print("🔷 Layer 2: Trying Gemini (Backup)...")
-            response_text, error = chat_with_gemini(message, system_context)
+            print("🔷 Layer 2: Trying Gemini (Backup) with conversation history...")
+            response_text, error = chat_with_gemini_history(
+                message, 
+                system_context, 
+                conversation_history
+            )
             ai_used = 'gemini'
         
-        # Layer 3: Rule-based fallback
+        # Layer 3: Rule-based fallback (no history context)
         if response_text is None:
             print(f"⚠️  Gemini failed: {error[:100]}")
             print("🔶 Layer 3: Using rule-based fallback...")
@@ -1506,24 +1757,66 @@ RESPONSE STYLE:
             ai_used = 'fallback'
         
         print(f"✅ Response generated via {ai_used.upper()}")
+        
+        # SAVE CHAT MESSAGE to database
+        save_chat_message(user['email'], message, response_text, ai_used)
+        
+        return jsonify({'response': response_text, 'powered_by': ai_used})
+        
+    except Exception as e:
+        print(f"❌ Chatbot error: {e}")
+        return jsonify({'response': 'Error processing request', 'powered_by': 'error'}), 500
+
+@app.route('/api/chat-history', methods=['GET'])
+@jwt_required
+def get_chat_history():
+    """Retrieve chat history for current user (JWT protected)"""
+    try:
+        user = get_current_user()
+        history = load_chat_history(user['email'])
+        
+        # Format for frontend display
+        formatted_history = []
+        for msg in history:
+            formatted_history.append({
+                'role': msg['role'],
+                'content': msg['content'],
+                'timestamp': msg['timestamp']
+            })
+        
         return jsonify({
-            'response': response_text,
-            'powered_by': ai_used
+            'success': True,
+            'chat_history': formatted_history,
+            'total_messages': len(formatted_history)
         })
     
     except Exception as e:
-        print(f"❌ Chatbot error: {e}")
-        return jsonify({
-            'response': "I'm here to help with energy predictions! What would you like to know?",
-            'powered_by': 'error_fallback'
-        }), 200
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/clear-chat-history', methods=['POST'])
+@jwt_required
+def clear_chat():
+    """Clear chat history for current user (JWT protected)"""
+    try:
+        user = get_current_user()
+        success = clear_chat_history(user['email'])
+        
+        if success:
+            return jsonify({'success': True, 'message': 'Chat history cleared'})
+        else:
+            return jsonify({'success': False, 'error': 'Failed to clear chat'}), 500
+    
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
 
 @app.route('/api/submit-review', methods=['POST'])
-@login_required
+@jwt_required
 def submit_review():
     try:
         data = request.get_json()
-        user_email = session.get('user_id')
+        user = get_current_user()
+        user_email = user['email']
         
         success = add_review(
             user_email=user_email,
@@ -1541,7 +1834,7 @@ def submit_review():
         return jsonify({'success': False, 'error': str(e)}), 400
 
 @app.route('/api/get-reviews', methods=['GET'])
-@login_required
+@jwt_required
 def get_reviews():
     try:
         reviews = load_reviews()
@@ -1550,7 +1843,7 @@ def get_reviews():
         return jsonify({'success': False, 'error': str(e)}), 400
 
 @app.route('/api/charts-data', methods=['GET'])
-@login_required
+@jwt_required
 def get_charts_data():
     return jsonify({
         'energy_trend': {
@@ -1572,7 +1865,7 @@ def get_charts_data():
     })
 
 @app.route('/api/system-status', methods=['GET'])
-@login_required
+@jwt_required
 def system_status():
     """Return current system status"""
     return jsonify({
@@ -1597,17 +1890,17 @@ def system_status():
 # ==================== USER PROFILE API ====================
 
 @app.route('/api/user-profile', methods=['GET'])
-@login_required
+@jwt_required
 def get_user_profile():
-    """Get current user's profile information"""
+    """Get user profile (JWT protected)"""
     try:
-        user_email = session.get('user_id')
+        user = get_current_user()
         users = load_users()
         
-        if user_email in users:
-            user_data = users[user_email]
+        if user['email'] in users:
+            user_data = users[user['email']]
             history = load_predictions_history()
-            user_predictions = history.get(user_email, [])
+            user_predictions = history.get(user['email'], [])
             
             total_predictions = len(user_predictions)
             avg_consumption = 0
@@ -1620,7 +1913,7 @@ def get_user_profile():
             profile = {
                 'success': True,
                 'name': user_data['name'],
-                'email': user_email,
+                'email': user['email'],
                 'member_since': user_data.get('created_at', 'N/A'),
                 'total_predictions': total_predictions,
                 'avg_consumption': round(avg_consumption, 2),
@@ -1630,16 +1923,17 @@ def get_user_profile():
             return jsonify(profile)
         else:
             return jsonify({'success': False, 'error': 'User not found'}), 404
-    
+            
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 
 @app.route('/api/prediction-history', methods=['GET'])
-@login_required
+@jwt_required
 def get_prediction_history():
     """Get user's prediction history"""
     try:
-        user_email = session.get('user_id')
+        user = get_current_user()
+        user_email = user['email']
         user_predictions = get_user_predictions(user_email)
         
         return jsonify({
@@ -1651,13 +1945,13 @@ def get_prediction_history():
         return jsonify({'success': False, 'error': str(e)}), 500
 
 @app.route('/api/dashboard-stats', methods=['GET'])
-@login_required
+@jwt_required
 def get_dashboard_stats():
-    """Get comprehensive dashboard statistics"""
+    """Get dashboard statistics (JWT protected)"""
     try:
-        user_email = session.get('user_id')
+        user = get_current_user()
         history = load_predictions_history()
-        user_predictions = history.get(user_email, [])
+        user_predictions = history.get(user['email'], [])
         
         if not user_predictions:
             return jsonify({
@@ -1717,10 +2011,62 @@ def get_dashboard_stats():
         }
         
         return jsonify(stats)
-    
+        
     except Exception as e:
-        print(f"Dashboard stats error: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/email-report', methods=['POST'])
+@jwt_required
+def email_report():
+    """Email PDF report to user (JWT protected)"""
+    try:
+        user = get_current_user()
+        
+        # Generate PDF
+        pdf_buffer = generate_pdf_report(user['email'])
+        
+        if not pdf_buffer:
+            return jsonify({'success': False, 'error': 'No predictions available'}), 400
+        
+        # Save PDF temporarily
+        import tempfile
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as tmp_file:
+            tmp_file.write(pdf_buffer.getvalue())
+            tmp_path = tmp_file.name
+        
+        # Send email using SendGrid
+        success = send_report(user['email'], tmp_path)
+        
+        # Clean up temp file
+        try:
+            os.remove(tmp_path)
+        except:
+            pass
+        
+        if success:
+            return jsonify({'success': True, 'message': 'Report sent to your email'})
+        else:
+            return jsonify({'success': False, 'error': 'Failed to send email'}), 500
+            
+    except Exception as e:
+        print(f"Email report error: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/test-email', methods=['GET'])
+def test_email():
+    """Test SendGrid email"""
+    from email_service import send_simple_email
+    
+    success = send_simple_email(
+        recipient_email='your-email@gmail.com',  # Your actual email
+        subject='Test Email from Smart Energy AI',
+        html_content='<p>This is a test email. If you receive this, SendGrid is working!</p>'
+    )
+    
+    if success:
+        return jsonify({'success': True, 'message': 'Email sent successfully!'})
+    else:
+        return jsonify({'success': False, 'message': 'Email failed to send'}), 500
 
 # ==================== APP STARTUP ====================
 
