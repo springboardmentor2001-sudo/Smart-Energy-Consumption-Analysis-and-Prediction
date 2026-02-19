@@ -1,0 +1,258 @@
+Smart Energy Consumption Analysis & Prediction System
+
+Technical Project Documentation
+
+---
+
+1. Project Overview
+
+The Smart Energy Consumption Analysis & Prediction System is an AI-powered web application that predicts building energy usage using a trained machine learning model and explains the result using generative AI.
+
+The platform allows users to:
+
+- Enter real-time building parameters
+- Upload CSV data for bulk predictions
+- Upload documents (PDF/TXT/DOCX) to auto-extract parameters
+- Interact with an intelligent chatbot
+- Generate an AI-based energy audit report
+- Download audit report as PDF
+- Provide feedback
+
+The goal is to simulate an intelligent energy monitoring assistant used in smart buildings.
+
+---
+
+2. System Architecture
+
+Frontend (HTML + CSS + JavaScript)
+↓ API Requests
+Flask Backend (Python)
+↓
+Machine Learning Model (XGBoost)
+↓
+Generative AI (Gemini)
+↓
+Database (SQLite)
+↓
+Report Generator (PDF)
+
+---
+
+3. Core Technologies Used
+
+Frontend
+HTML5
+CSS3
+JavaScript
+Chart.js
+Web Speech API (Speech-to-Text & Text-to-Speech)
+
+Backend
+Python Flask
+NumPy
+Pandas
+SQLite3
+ReportLab (PDF generation)
+PyPDF2 & python-docx (file parsing)
+
+Machine Learning
+XGBoost Regression Model
+Feature-based prediction system
+
+Generative AI
+Google Gemini API
+Context-aware chatbot explanations
+
+Deployment
+Render Cloud Hosting
+
+---
+
+4. Machine Learning Model
+
+Model Type
+
+XGBoost Regression
+
+Purpose
+
+Predict electricity consumption (kWh) of a building.
+
+Input Features
+
+Feature| Description
+HVACUsage| Whether cooling system is ON (0/1)
+Occupancy| Number of people inside building
+Temperature| Indoor temperature in Celsius
+RenewableEnergy| Percentage renewable power usage
+Hour| Time of day (0–23)
+IsWeekend| Weekend indicator (0/1)
+
+Output
+
+Predicted Energy Consumption (kWh)
+
+---
+
+5. Application Modules
+
+5.1 Runtime Prediction
+
+User manually enters parameters → system predicts energy consumption.
+
+Route:
+POST /predict
+
+---
+
+5.2 Chatbot Prediction
+
+User writes natural language → parameters extracted → prediction generated.
+
+Example:
+"HVAC on, 40 people, temperature 32, renewable 20, hour 14 weekend"
+
+Route:
+POST /chat
+
+Capabilities:
+
+- Predict energy
+- Explain prediction
+- Answer ML questions
+- General energy knowledge
+
+---
+
+5.3 Bulk Prediction (CSV Upload)
+
+Upload dataset → system predicts multiple rows → table output → downloadable CSV.
+
+Route:
+POST /offline-predict
+
+---
+
+5.4 Smart Document Input
+
+Upload PDF/TXT/DOCX → system extracts parameters → auto fills form → predicts.
+
+Route:
+POST /extract-inputs
+
+Extraction Modes:
+
+1. Gemini AI extraction
+2. Rule-based fallback extraction
+
+---
+
+5.5 Energy Audit Report
+
+Generates full building efficiency analysis.
+
+Route:
+GET /audit
+
+Includes:
+
+- Efficiency Score
+- Risk Level
+- Inefficiencies
+- Recommendations
+- Analysis Summary
+
+---
+
+5.6 PDF Report Download
+
+Exports audit as professional report.
+
+Route:
+GET /audit-pdf
+
+Contains:
+
+- Prediction summary
+- System overview
+- Feature impact chart
+- Recommendations
+
+---
+
+5.7 Feedback System
+
+Stores user feedback in database.
+
+Route:
+POST /submit-feedback
+
+Database:
+SQLite → feedback.db
+
+Fields:
+name
+email
+category
+message
+timestamp
+
+---
+
+6. Chatbot Intelligence Logic
+
+The chatbot uses a hybrid system:
+
+1. ML Prediction Engine
+2. Context Memory (last prediction)
+3. Generative AI reasoning
+
+Decision Flow:
+
+User Message →
+├─ Contains parameters → Predict
+├─ Asks why → Explain prediction
+├─ Asks model questions → Explain ML
+└─ General question → AI knowledge
+
+---
+
+7. Speech Features
+
+Browser based (no backend load)
+
+Speech-to-Text
+Uses Web Speech Recognition API
+
+Text-to-Speech
+Uses SpeechSynthesis API
+
+User can mute/unmute voice output.
+
+---
+
+8. Energy Efficiency Scoring Logic
+
+Base Score = 100
+
+Penalty Rules:
+HVAC ON → −20
+High Temperature → −15
+High Occupancy → −20
+Low Renewable Energy → −15
+Weekend → −10
+
+Score Categories:
+80–100 → Low Risk
+60–79 → Medium Risk
+Below 60 → High Risk
+
+---
+
+9. Database Structure
+
+Table: feedback
+
+Column| Type
+id| Integer Primary Key
+name| Te
