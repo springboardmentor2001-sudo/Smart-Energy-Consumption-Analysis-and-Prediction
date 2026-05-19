@@ -236,7 +236,23 @@ Create a `.env` file in the `frontend/` directory:
 
 ## 🏃 Running the Application
 
-### Option 1: Using Batch Scripts (Windows)
+### Option 1: One-click Startup Script (Windows)
+
+From the `energy-prediction-webapp` directory, run either of these:
+
+```powershell
+.\run_project.bat
+```
+
+or
+
+```powershell
+.\run_project.ps1
+```
+
+This opens two terminals: one for the backend and one for the frontend.
+
+### Option 2: Using Batch Scripts (Windows)
 
 1. **Run Backend**:
    ```bash
@@ -250,7 +266,7 @@ Create a `.env` file in the `frontend/` directory:
    npm run dev
    ```
 
-### Option 2: Manual Commands
+### Option 3: Manual Commands
 
 **Backend**:
 ```bash
